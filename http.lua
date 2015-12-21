@@ -65,6 +65,15 @@ local statusCodes = {
     
 local http
 do
+
+  ------------------------------------------------------------------------------
+  -- handler methods
+  ------------------------------------------------------------------------------
+  local handler
+  local use = function(self, handler)
+    self.handler = handler
+  end
+
   ------------------------------------------------------------------------------
   -- request methods
   ------------------------------------------------------------------------------
@@ -124,11 +133,12 @@ do
   ------------------------------------------------------------------------------
   -- HTTP parser
   ------------------------------------------------------------------------------
-  local http_handler = function(handler)
+  local http_handler = function()
     return function(conn)
       local req, res
       local buf = ""
       local method, url
+      
       local ondisconnect = function(conn)
         collectgarbage("collect")
       end
@@ -149,8 +159,10 @@ do
           req:onheader(k, v)
         end
       end
+      
       -- body data handler
       local body_len = 0
+      
       local ondata = function(conn, chunk)
         -- NB: do not reset node in case of lengthy requests
         tmr.wdclr()
@@ -165,6 +177,7 @@ do
           req:ondata()
         end
       end
+      
       local onreceive = function(conn, chunk)
         -- merge chunks in buffer
         if buf then
@@ -210,7 +223,14 @@ do
             -- spawn request handler
             -- NB: do not reset in case of lengthy requests
             tmr.wdclr()
-            handler(req, res)
+            
+            -- Handle request
+            if handler then
+                handler(req, res)
+            else
+                print("No handler found")
+            end
+            
             tmr.wdclr()
             -- NB: we feed the rest of the buffer as starting chunk of body
             ondata(conn, buf)
@@ -233,12 +253,12 @@ do
   -- HTTP server
   ------------------------------------------------------------------------------
   local srv
-  local createServer = function(port, handler)
+  local createServer = function(port)
     if srv then srv:close() end
     srv = net.createServer(net.TCP, 15)
     -- listen
-    srv:listen(port, http_handler(handler))
-    return srv
+    srv:listen(port, http_handler())
+    return {use = use}
   end
   ------------------------------------------------------------------------------
   -- HTTP server methods
