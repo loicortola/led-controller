@@ -1,270 +1,137 @@
 ------------------------------------------------------------------------------
 -- HTTP server module
---
 -- LICENCE: http://opensource.org/licenses/MIT
--- Vladimir Dronnikov <dronnikov@gmail.com>
--- Contributors: Loic Ortola https://github.com/loicortola
+-- Author: Loic Ortola https://github.com/loicortola
 ------------------------------------------------------------------------------
-local collectgarbage, tonumber, tostring = collectgarbage, tonumber, tostring
-
 -- HTTP status codes as defined in RFC 2616 + common ones along with their message
-local statusCodes = {
-    [100] = 'Continue',
-    [101] = 'Switching Protocols',
-    [102] = 'Processing',         -- RFC 4918
-    [200] = 'OK',
-    [201] = 'Created',
-    [202] = 'Accepted',
-    [203] = 'Non-Authoritative Information',
-    [204] = 'No Content',
-    [205] = 'Reset Content',
-    [206] = 'Partial Content',
-    [207] = 'Multi-Status',           -- RFC 4918
-    [300] = 'Multiple Choices',
-    [301] = 'Moved Permanently',
-    [302] = 'Moved Temporarily',
-    [303] = 'See Other',
-    [304] = 'Not Modified',
-    [305] = 'Use Proxy',
-    [307] = 'Temporary Redirect',
-    [400] = 'Bad Request',
-    [401] = 'Unauthorized',
-    [402] = 'Payment Required',
-    [403] = 'Forbidden',
-    [404] = 'Not Found',
-    [405] = 'Method Not Allowed',
-    [406] = 'Not Acceptable',
-    [407] = 'Proxy Authentication Required',
-    [408] = 'Request Time-out',
-    [409] = 'Conflict',
-    [410] = 'Gone',
-    [411] = 'Length Required',
-    [412] = 'Precondition Failed',
-    [413] = 'Request Entity Too Large',
-    [414] = 'Request-URI Too Large',
-    [415] = 'Unsupported Media Type',
-    [416] = 'Requested Range Not Satisfiable',
-    [417] = 'Expectation Failed',
-    [418] = 'I\'m a teapot',              -- RFC 2324
-    [422] = 'Unprocessable Entity',       -- RFC 4918
-    [423] = 'Locked',                     -- RFC 4918
-    [424] = 'Failed Dependency',          -- RFC 4918
-    [425] = 'Unordered Collection',       -- RFC 4918
-    [426] = 'Upgrade Required',           -- RFC 2817
-    [500] = 'Internal Server Error',
-    [501] = 'Not Implemented',
-    [502] = 'Bad Gateway',
-    [503] = 'Service Unavailable',
-    [504] = 'Gateway Time-out',
-    [505] = 'HTTP Version not supported',
-    [506] = 'Variant Also Negotiates',    -- RFC 2295
-    [507] = 'Insufficient Storage',       -- RFC 4918
-    [509] = 'Bandwidth Limit Exceeded',
-    [510] = 'Not Extended'                -- RFC 2774
-}
-    
-local http
 do
-
-  ------------------------------------------------------------------------------
-  -- handler methods
-  ------------------------------------------------------------------------------
-  local handler
-  local use = function(self, handler)
-    self.handler = handler
-  end
-
-  ------------------------------------------------------------------------------
-  -- request methods
-  ------------------------------------------------------------------------------
-  local make_req = function(conn, method, url, params)
-    local req = {
-      conn = conn,
-      method = method,
-      url = url,
-      params = params
-    }
-    -- return setmetatable(req, {
-    -- })
-    return req
-  end
-
-  ------------------------------------------------------------------------------
-  -- response methods
-  ------------------------------------------------------------------------------
-  local send = function(self, data, status)
-    local c = self.conn
-    c:send("HTTP/1.1 ")
-    c:send(tostring(status or self.statusCode))
-    c:send(" " + tostring(statusCodes[status or self.statusCode]) + "\r\n")
-    self:addHeader("Date",os.date("!%a, %d %b %Y %H:%M:%S GMT"))
-    self:addHeader("Server", "NodeMCU")
-    if data then
-        self:addHeader("Content-Length", string.len(data))
+ ------------------------------------------------------------------------------
+ -- HTTP parser
+ ------------------------------------------------------------------------------
+ local httphandler = function(handler_callback)
+  return function(conn)
+   collectgarbage("collect")
+   print("Begin request: " .. node.heap())
+   -- Keep reference to callback
+   local self = handler_callback
+   local req, res, ondisconnect, onheader, ondata, onreceive
+   local buf = ""
+   local parsedlines = 0
+   local bodylength = 0
+   
+   ondisconnect = function(conn)
+    -- Manually set everything to nil to allow gc
+    req = nil
+    res = nil
+    ondisconnect = nil
+    onheader = nil
+    ondata = nil
+    onreceive = nil
+    buf = nil
+    parsedlines = nil
+    bodylength = nil
+    collectgarbage("collect")
+    print("Garbage Collector is sweeping " .. node.heap())
+   end
+   
+   -- Header parser
+   onheader = function(k, v)
+    print("Adding header " .. k)
+    if k == "content-length" then
+     bodylength = tonumber(v)
     end
-    --   write response headers
-    for key,value in pairs(self.headers) do
-        c:send(key)
-        c:send(": ")
-        c:send(value)
-        c:send("\r\n")
+    -- Delegate to request object
+    if req then
+     req:addheader(k, v)
     end
-    if data then
-      c:send(data)
-    end
-    -- close connection
-    c:close()
-  end
-  local addHeader = function(self, name, value)
-    local h = self.headers
-    h[name] = value
-  end
-  local make_res = function(conn)
-    local res = {
-      conn = conn,
-      headers = {},
-      statusCode = 200
-    }
-    res.addHeader = addHeader
-    res.send = send
-    return res
-  end
+   end
 
-  ------------------------------------------------------------------------------
-  -- HTTP parser
-  ------------------------------------------------------------------------------
-  local http_handler = function()
-    return function(conn)
-      local req, res
-      local buf = ""
-      local method, url
-      
-      local ondisconnect = function(conn)
-        collectgarbage("collect")
-      end
-      -- header parser
-      local cnt_len = 0
-      local onheader = function(conn, k, v)
-        -- TODO: look for Content-Type: header
-        -- to help parse body
-        -- parse content length to know body length
-        if k == "content-length" then
-          cnt_len = tonumber(v)
-        end
-        if k == "expect" and v == "100-continue" then
-          conn:send("HTTP/1.1 100 Continue\r\n")
-        end
-        -- delegate to request object
-        if req and req.onheader then
-          req:onheader(k, v)
-        end
-      end
-      
-      -- body data handler
-      local body_len = 0
-      
-      local ondata = function(conn, chunk)
-        -- NB: do not reset node in case of lengthy requests
-        tmr.wdclr()
-        -- feed request data to request handler
-        if not req or not req.ondata then return end
-        req:ondata(chunk)
-        -- NB: once length of seen chunks equals Content-Length:
-        --   onend(conn) is called
-        body_len = body_len + #chunk
-        -- print("-B", #chunk, body_len, cnt_len, node.heap())
-        if body_len >= cnt_len then
-          req:ondata()
-        end
-      end
-      
-      local onreceive = function(conn, chunk)
-        -- merge chunks in buffer
-        if buf then
-          buf = buf .. chunk
-        else
-          buf = chunk
-        end
-        -- consume buffer line by line
-        while #buf > 0 do
-          -- extract line
-          local e = buf:find("\r\n", 1, true)
-          if not e then break end
-          local line = buf:sub(1, e - 1)
-          buf = buf:sub(e + 2)
-          -- method, url?
-          if not method then
-            local i
-            -- NB: just version 1.1 assumed
-            _, i, method, url = line:find("^([A-Z]+) (.-) HTTP/1.1$")
-            _, _, url, queryString = string.find(url, "([^%s]+)%?([^%s]+)")
-            params = {}
-            if queryString then
-                for name, value in string.gfind(queryString, "([^&=]+)=([^&=]+)") do
-                    params[name] = value
-                end
-            end
-            if method then
-              -- make request and response objects
-              req = make_req(conn, method, url, params)
-              res = make_res(conn)
-            end
-          -- header line?
-          elseif #line > 0 then
-            -- parse header
-            local _, _, k, v = line:find("^([%w-]+):%s*(.+)")
-            -- header seems ok?
-            if k then
-              k = k:lower()
-              onheader(conn, k, v)
-            end
-          -- headers end
-          else
-            -- spawn request handler
-            -- NB: do not reset in case of lengthy requests
-            tmr.wdclr()
-            
-            -- Handle request
-            if handler then
-                handler(req, res)
-            else
-                print("No handler found")
-            end
-            
-            tmr.wdclr()
-            -- NB: we feed the rest of the buffer as starting chunk of body
-            ondata(conn, buf)
-            -- buffer no longer needed
-            buf = nil
-            -- NB: we explicitly reassign receive handler so that
-            --   next received chunks go directly to body handler
-            conn:on("receive", ondata)
-            -- parser done
-            break
-          end
-        end
-      end
+   -- Body parser
+   ondata = function(conn, chunk)
+    -- Prevent MCU from resetting
+    tmr.wdclr()
+    collectgarbage("collect")
+    if chunk then
+     req.body = req.body .. chunk
+     if #req.body >= bodylength then
       conn:on("receive", onreceive)
-      conn:on("disconnection", ondisconnect)
+      dofile(self.handler)(req, res)
+     end
     end
-  end
+   end
 
-  ------------------------------------------------------------------------------
-  -- HTTP server
-  ------------------------------------------------------------------------------
-  local srv
-  local createServer = function(port)
-    if srv then srv:close() end
-    srv = net.createServer(net.TCP, 15)
-    -- listen
-    srv:listen(port, http_handler())
-    return {use = use}
+   -- Metadata parser
+   onreceive = function(conn, chunk)
+    collectgarbage("collect")
+    -- concat chunks in buffer
+    if buf then
+     buf = buf .. chunk
+    else
+     buf = chunk
+    end
+    -- Read line from chunk
+    while #buf > 0 do
+     local e = buf:find("\r\n", 1, true)
+     -- Leave if line not done
+     if not e then break end
+     local line = buf:sub(1, e - 1)
+     buf = buf:sub(e + 2)
+     if parsedlines == 0 then
+      -- FIRST LINE
+      req = dofile('http-request.lua')(conn, line)
+      res = dofile('http-response.lua')(conn)
+     elseif #line > 0 then
+      -- HEADER LINES
+      -- Parse header
+      local _, _, k, v = line:find("^([%w-]+):%s*(.+)")
+      if k then
+      -- Valid header
+       k = k:lower()
+       onheader(k, v)
+      end
+     else
+      -- BODY
+      tmr.wdclr()
+      -- Buffer no longer needed
+      buf = nil
+      if bodylength == 0 then
+       collectgarbage("collect")
+       -- Handle request if no body present
+       dofile(self.handler)(req, res)
+      else
+       -- Change receive hook to body parser if body present
+       conn:on("receive", ondata)
+      end
+      break
+     end
+     parsedlines = parsedlines + 1
+    end
+   end
+   conn:on("receive", onreceive)
+   conn:on("disconnection", ondisconnect)
   end
-  ------------------------------------------------------------------------------
-  -- HTTP server methods
-  ------------------------------------------------------------------------------
-  http = {
-    createServer = createServer
-  }
+ end
+
+ ------------------------------------------------------------------------------
+ -- HTTP server
+ ------------------------------------------------------------------------------
+ local srv
+ local createserver = function(port)
+  if srv then srv:close()
+  end
+  srv = net.createServer(net.TCP, 5)
+  local externalhandler = {}
+  externalhandler.use = function(self, routes)
+   self.handler = routes;
+  end
+  -- Listen
+  srv:listen(port, httphandler(externalhandler))
+  print(node.heap())
+  print("Server listening on port " .. tostring(port))
+  return externalhandler
+ end
+ 
+ return {
+  createserver = createserver
+ }
 end
-return http
