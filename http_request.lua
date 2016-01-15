@@ -1,10 +1,11 @@
-local addheader = function(req, name, value)
- local h = req.headers
- h[name] = value
-end
-
-local createrequest = function(conn, line)
- print(line)
+return function(conn, line)
+ ------------------------------------------------------------------------------
+ -- add header (should be called before send)
+ ------------------------------------------------------------------------------
+ local addheader = function(req, name, value)
+  local h = req.headers
+  h[name] = value
+ end
  -- Here, we parse the first line
  -- NB: just version 1.1 assumed
  local _, method, url, querystring, url_no_qs, params
@@ -23,6 +24,8 @@ local createrequest = function(conn, line)
    params[name] = value
   end
  end
+ -- remove modules from cache
+ package.loaded['http_request'] = nil
  -- Return request object
  return {
   conn = conn,
@@ -34,5 +37,3 @@ local createrequest = function(conn, line)
   params = params
  }
 end
-
-return createrequest

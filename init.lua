@@ -1,5 +1,5 @@
 wifi.setmode(wifi.STATION)
-wifi.sta.config("freebox_toto", "31910A7C78")
+wifi.sta.config("DarthVader", "loicortola")
 wifi.sta.connect()
 print("---------------------------")
 print("Welcome to Loic's super MCU")

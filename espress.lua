@@ -8,17 +8,16 @@ do
  ------------------------------------------------------------------------------
  -- HTTP parser
  ------------------------------------------------------------------------------
- local httphandler = function(handler_callback)
+ local httphandler = function(self)
   return function(conn)
-   collectgarbage("collect")
    print("Begin request: " .. node.heap())
+
    -- Keep reference to callback
-   local self = handler_callback
    local req, res, ondisconnect, onheader, ondata, onreceive
    local buf = ""
    local parsedlines = 0
    local bodylength = 0
-   
+
    ondisconnect = function(conn)
     -- Manually set everything to nil to allow gc
     req = nil
@@ -33,10 +32,10 @@ do
     collectgarbage("collect")
     print("Garbage Collector is sweeping " .. node.heap())
    end
-   
+
    -- Header parser
    onheader = function(k, v)
-    print("Adding header " .. k)
+    --print("Adding header " .. k)
     if k == "content-length" then
      bodylength = tonumber(v)
     end
@@ -54,8 +53,10 @@ do
     if chunk then
      req.body = req.body .. chunk
      if #req.body >= bodylength then
-      conn:on("receive", onreceive)
-      dofile(self.handler)(req, res)
+      local f = loadfile(self.handlers.handler)
+      f()(req, res, self.handlers.next, self.handlers.opts)
+      f = nil
+      collectgarbage("collect")
      end
     end
    end
@@ -64,28 +65,31 @@ do
    onreceive = function(conn, chunk)
     collectgarbage("collect")
     -- concat chunks in buffer
-    if buf then
-     buf = buf .. chunk
-    else
-     buf = chunk
-    end
+    buf = buf .. chunk
     -- Read line from chunk
     while #buf > 0 do
      local e = buf:find("\r\n", 1, true)
      -- Leave if line not done
      if not e then break end
+
      local line = buf:sub(1, e - 1)
      buf = buf:sub(e + 2)
+
      if parsedlines == 0 then
       -- FIRST LINE
-      req = dofile('http-request.lua')(conn, line)
-      res = dofile('http-response.lua')(conn)
+      local f = loadfile('http_request.lua')
+      req = f()(conn, line)
+      f = nil
+      local f = loadfile('http_response.lua')
+      res = f()(conn)
+      f = nil
+      collectgarbage("collect")
      elseif #line > 0 then
       -- HEADER LINES
       -- Parse header
       local _, _, k, v = line:find("^([%w-]+):%s*(.+)")
       if k then
-      -- Valid header
+       -- Valid header
        k = k:lower()
        onheader(k, v)
       end
@@ -97,16 +101,21 @@ do
       if bodylength == 0 then
        collectgarbage("collect")
        -- Handle request if no body present
-       dofile(self.handler)(req, res)
+       local f = loadfile(self.handlers.handler)
+       f()(req, res, self.handlers.next, self.handlers.opts)
+       f = nil
+       collectgarbage("collect")
       else
        -- Change receive hook to body parser if body present
        conn:on("receive", ondata)
+       onreceive = nil
       end
       break
      end
      parsedlines = parsedlines + 1
     end
    end
+
    conn:on("receive", onreceive)
    conn:on("disconnection", ondisconnect)
   end
@@ -120,17 +129,29 @@ do
   if srv then srv:close()
   end
   srv = net.createServer(net.TCP, 5)
-  local externalhandler = {}
-  externalhandler.use = function(self, routes)
-   self.handler = routes;
+  local hdlr = {}
+  hdlr.use = function(self, handler, opts)
+   if self.handlers == nil then
+    self.handlers = { handler = handler, opts = opts }
+   else
+    local tmp = self.handlers
+    while not (tmp == nil) do
+     local next = tmp.next
+     if next == nil then
+      self.handlers.next = { handler = handler, opts = opts }
+     end
+     tmp = next
+    end
+   end
+   collectgarbage("collect")
   end
   -- Listen
-  srv:listen(port, httphandler(externalhandler))
+  srv:listen(port, httphandler(hdlr))
   print(node.heap())
   print("Server listening on port " .. tostring(port))
-  return externalhandler
+  return hdlr
  end
- 
+
  return {
   createserver = createserver
  }

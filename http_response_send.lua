@@ -1,12 +1,7 @@
 ------------------------------------------------------------------------------
--- send header
+-- send
 ------------------------------------------------------------------------------
-local sendheader = function(res, k, v)
- local conn = res.conn
- conn:send(k .. ": " .. v .. "\r\n")
-end
-
-local send = function(res, data, status)
+return function(res, data, status)
  local conn = res.conn
  print(node.heap())
  --   write protocol headers
@@ -17,7 +12,8 @@ local send = function(res, data, status)
   res:addheader("Content-Length", string.len(data))
  end
  for key, value in pairs(res.headers) do
-  sendheader(res, key, value)
+  -- send header
+  res.conn:send(key .. ": " .. value .. "\r\n")
  end
  conn:send("\r\n")
  --   write body if relevant
@@ -28,5 +24,3 @@ local send = function(res, data, status)
  -- close connection
  conn:close()
 end
-
-return send

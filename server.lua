@@ -1,6 +1,6 @@
 print("Server.lua : " .. tostring(node.heap()))
 do
- local HttpServer = require 'http'
+ local espress = require 'espress'
  local port = 80
  print("Server.lua after http : " .. tostring(node.heap()))
 
@@ -11,7 +11,7 @@ do
  pwm.setup(3, 250, 1023)
  pwm.start(3)
 
- local server = HttpServer.createserver(port)
- server:use("routes.lua")
- 
+ local server = espress.createserver(port)
+ server:use("auth_api_key.lua", {apikey = "1234", includes = "/api"})
+ server:use("routes_auto.lua")
 end

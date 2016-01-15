@@ -1,28 +1,35 @@
-do
- local routes = {}
- 
- local addHandler = function(url, method, callback)
-  if not (routes[url]) then
-   routes[url] = {}
-  end
-  routes[url][method] = callback
- end
+local routes = {}
 
- local makeHandler = function(method)
-  return function(url, callback)
-   addHandler(url, method, callback)
-  end
+local addhandler = function(url, method, callback)
+ if not (routes[url]) then
+  routes[url] = {}
  end
- 
- local handler = function(req, res)
-  print("Request received: ", req.method, req.url)
-  if routes[req.url] then
-   local h = dofile(routes[req.url][req.method])
-   h(req, res)
+ routes[url][method] = callback
+end
+
+local makehandler = function(method)
+ return function(url, callback)
+  addhandler(url, method, callback)
+ end
+end
+
+local handler = function(req, res, next, opts)
+ print("Request received: ", req.method, req.url)
+ if routes[req.url] then
+  print(routes[req.url][req.method])
+  local h = loadfile(routes[req.url][req.method])
+  if h then
+   h()(req, res)
+   h = nil
   else
-   res.statuscode = 404
+   h = nil
+   res.statuscode = 405
    res:send()
   end
+ else
+  res.statuscode = 404
+  res:send()
  end
- return { handler = handler, get = makeHandler('GET'), post = makeHandler('POST'), put = makeHandler('PUT'), delete = makeHandler('DELETE'), options = makeHandler('OPTIONS'), head = makeHandler('HEAD') }
 end
+
+return { handler = handler, get = makehandler('GET'), post = makehandler('POST'), put = makehandler('PUT'), delete = makehandler('DELETE'), options = makehandler('OPTIONS'), head = makehandler('HEAD') }
