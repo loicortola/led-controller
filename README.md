@@ -153,20 +153,20 @@ static/logo.png
 static/script.js  
 
 ##### Dynamic content
-Your API scripts should be stored as routes/path.method.lua (example: register.post.lua, computers.get.lua ...) and should hold the following function:  
+Your API scripts should be stored as routes/path.method.lua (example: routes/foo.post.lua, routes/bar.get.lua ...) and should hold the following function:  
  ```lua
  return function(req, res)
   -- your code here
   res:addheader("Content-Type", "application/json; charset=utf-8")
-  res:send("{red:" .. 255 - pwm.getduty(1) / 4 .. ", green:" .. 255 - pwm.getduty(2) / 4 .. ", blue:" .. 255 - pwm.getduty(3) / 4 .. "}")
+  res:send("{foo:\"bar\"}")
   -- end of your code
  end
  ```
 
 The scripts will be available under the following uri: host/api/path  
 For instance: 
-routes/computers.get.lua <=> [GET] http://host/api/computers  
-routes/register.post.lua <=> [POST] http://host/api/register  
+routes/foo.get.lua <=> [GET] http://host/api/foo  
+routes/bar.post.lua <=> [POST] http://host/api/bar  
 
 Don't forget to take a look at the req and res API.  
 Samples are available into the sample/ subfolder

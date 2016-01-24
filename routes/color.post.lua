@@ -1,31 +1,20 @@
-do
- local post = function(req, res)
-  if req.params.red then
-   local duty = 1023 - tonumber(req.params.red) * 4;
-   if duty < 10 then
-    duty = 0
-   end
-   print("Duty is " .. tostring(duty))
-   pwm.setduty(1, duty)
-  end
-  if req.params.green then
-   local duty = 1023 - tonumber(req.params.green) * 4;
-   if duty < 10 then
-    duty = 0
-   end
-   print("Duty is " .. tostring(duty))
-   pwm.setduty(2, duty)
-  end
-  if req.params["blue"] then
-   local duty = 1023 - tonumber(req.params["blue"]) * 4;
-   if duty < 10 then
-    duty = 0
-   end
-   print("Duty is " .. tostring(duty))
-   pwm.setduty(3, duty)
-  end
-  res:addheader("Content-Type", "application/json; charset=utf-8")
-  res:send("{red:" .. 255 - pwm.getduty(1) / 4 .. ", green:" .. 255 - pwm.getduty(2) / 4 .. ", blue:" .. 255 - pwm.getduty(3) / 4 .. "}")
+return function(req, res)
+ tmr.stop(0)
+ local r = -1
+ local g = -1
+ local b = -1
+ 
+ if req.params.red and req.params.green and req.params.blue then
+  r = tonumber(req.params.red);
+  g = tonumber(req.params.green);
+  b = tonumber(req.params.blue);
+  local loader = loadfile("ledcontroller.lc")
+  local ledcontroller = loader()
+
+  ledcontroller.setcolor(r, g, b)
  end
- return post
+ 
+ 
+ res:addheader("Content-Type", "application/json; charset=utf-8")
+ res:send()
 end

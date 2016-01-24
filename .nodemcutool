@@ -1,0 +1,6 @@
+{
+    "baudrate": "9600",
+    "port": "/dev/cu.SLAB_USBtoUART",
+    "optimize": true,
+    "compile": true
+}

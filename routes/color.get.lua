@@ -1,5 +1,9 @@
 local get = function(req, res)
+ local loader = loadfile("ledcontroller.lc")
+ local ledcontroller = loader()
+
+ local color = ledcontroller.getcolor()
  res:addheader("Content-Type", "application/json; charset=utf-8")
- res:send("{red:" .. 255 - pwm.getduty(1) / 4 .. ", green:" .. 255 - pwm.getduty(2) / 4 .. ", blue:" .. 255 - pwm.getduty(3) / 4 .. "}")
+ res:send("{red:" .. color.r .. ", green:" .. color.g .. ", blue:" .. color.b .. "}")
 end
 return get
