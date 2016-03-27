@@ -51,6 +51,8 @@ if file.open("wifi.settings", "r") then
    ledcontroller.stopanimation()
    -- Load default colors
    ledcontroller.loaddefaults()
+   -- Register Multicast DNS
+   mdns.register("led-" .. node.chipid(), "http", 80)
    dofile("server.lc")
   end
   if attempts > 30 then

@@ -15,9 +15,7 @@ local setupAP = function()
  print("Setting up Access Point")
  wifi.setmode(wifi.STATIONAP)
  local cfg = {}
- local mac = wifi.ap.getmac()
- print("Mac is: " .. mac)
- cfg.ssid = lcprefix .. mac
+ cfg.ssid = lcprefix .. node.chipid()
  cfg.password = "dummypass"
  cfg.auth = wifi.AUTH_OPEN
  cfg.channel = 10
