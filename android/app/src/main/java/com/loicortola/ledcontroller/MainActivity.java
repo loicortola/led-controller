@@ -1,37 +1,33 @@
 package com.loicortola.ledcontroller;
 
+import android.app.DialogFragment;
 import android.graphics.Color;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.Toast;
 
 import com.larswerkman.holocolorpicker.ColorPicker;
-import com.larswerkman.holocolorpicker.OpacityBar;
 import com.larswerkman.holocolorpicker.SVBar;
-import com.larswerkman.holocolorpicker.SaturationBar;
 import com.larswerkman.holocolorpicker.ValueBar;
-
-import java.io.IOException;
-
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 /**
  * Created by Loïc Ortola on 23/01/2016.
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener, LedController.LedControllerListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener, LedController.LedControllerListener, ChangeSettingsDialogFragment.OnSettingsChangedListener {
 
     private ColorPicker picker;
     private ValueBar redBar;
     private ValueBar greenBar;
     private ValueBar blueBar;
     private SeekBar timeBar;
+    private ImageButton powerBtn;
     private Button changeColorBtn;
     private Button animateBtn;
     private LedController ledController;
@@ -52,6 +48,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         changeColorBtn = (Button) findViewById(R.id.btn_change);
         animateBtn = (Button) findViewById(R.id.btn_animate);
 
+        powerBtn = (ImageButton) findViewById(R.id.btn_power);
+
         ledController = new LedController(this, this);
 
         // Add SVBar to Picker
@@ -67,7 +65,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // Set listeners
         changeColorBtn.setOnClickListener(this);
         animateBtn.setOnClickListener(this);
+        powerBtn.setOnClickListener(this);
 
+    }
+
+    @Override
+    protected void onPause() {
+        ledController.cancelTasks();
+        super.onPause();
     }
 
     @Override
@@ -85,7 +90,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_sync) {
+            // Trigger service resolution.
+            new MulticastDNSResolver(getApplicationContext(), "_http._tcp.", "led-", new MulticastDNSResolver.OnServiceResolved() {
+                @Override
+                public void onServiceResolved(NsdServiceInfo info) {
+                    // FIXME dirty
+                    ledController.setHost("http://" + info.getHost().getHostAddress() + ":" + info.getPort());
+                    DialogFragment dialog = new ChangeSettingsDialogFragment();
+                    dialog.show(getFragmentManager(), "ChangeSettingsDialog");
+                }
+            });
             return true;
         }
 
@@ -94,16 +109,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        switch(v.getId()) {
+        switch (v.getId()) {
             case R.id.btn_change:
                 ledController.changeColor(picker.getColor());
                 break;
             case R.id.btn_animate:
                 int color = redBar.getColor() + greenBar.getColor() + blueBar.getColor();
                 ledController.animate(color, timeBar.getProgress() + 8);
-                Toast.makeText(this, "(" + Color.red(color) + ", " + Color.green(color) + ", " + Color.blue(color) + ")", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.btn_power:
+                ledController.switchOnOff();
                 break;
         }
+    }
+
+    @Override
+    public void onSwitched(Boolean success) {
+        Toast.makeText(this, "Switched: " + success, Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -113,11 +135,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onAnimate(Boolean success) {
-        Toast.makeText(this, "Animate: " + success, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "Animation: " + success, Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void onCheckOnline(Boolean success) {
+        if (!success) {
+            // Maybe IP Has changed. Try to resolve.
+            new MulticastDNSResolver(getApplicationContext(), "_http._tcp.", "led-", new MulticastDNSResolver.OnServiceResolved() {
+                @Override
+                public void onServiceResolved(NsdServiceInfo info) {
+                    // FIXME dirty
+                    ledController.setHost("http://" + info.getHost().getHostAddress() + ":" + info.getPort());
+                }
+            });
+        }
         Toast.makeText(this, "Online: " + success, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    public void onSettingsChanged(String key) {
+        ledController.setKey(key);
+        Toast.makeText(this, "Key Updated successfully", Toast.LENGTH_LONG).show();
     }
 }

@@ -3,6 +3,7 @@ package com.loicortola.ledcontroller;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.AsyncTask;
+import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.io.IOException;
@@ -17,17 +18,27 @@ import okhttp3.Response;
  * Created by Loïc Ortola on 23/01/2016.
  */
 public class LedController {
+
+    public static final String PREF_KEY = "pref_key";
+    public static final String PREF_HOST = "pref_host";
+
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private OkHttpClient client = new OkHttpClient();
     private Context ctx;
     private CheckOnlineTask checkOnlineTask;
     private ChangeColorTask changeColorTask;
     private AnimateTask animateTask;
+    private SwitchTask switchTask;
     private LedControllerListener l;
 
     public interface LedControllerListener {
+
+        void onSwitched(Boolean success);
+
         void onColorChange(Boolean success);
+
         void onAnimate(Boolean success);
+
         void onCheckOnline(Boolean success);
     }
 
@@ -36,6 +47,14 @@ public class LedController {
         this.l = l;
         checkOnlineTask = new CheckOnlineTask();
         checkOnlineTask.execute();
+    }
+
+    public void setHost(String host) {
+        PreferenceManager.getDefaultSharedPreferences(ctx).edit().putString(PREF_HOST, host).commit();
+    }
+
+    public void setKey(String key) {
+        PreferenceManager.getDefaultSharedPreferences(ctx).edit().putString(PREF_KEY, key).commit();
     }
 
     public void changeColor(int color) {
@@ -54,6 +73,14 @@ public class LedController {
         animateTask.execute();
     }
 
+    public void switchOnOff() {
+        if (switchTask != null && switchTask.getStatus().equals(AsyncTask.Status.RUNNING)) {
+            switchTask.cancel(true);
+        }
+        switchTask = new SwitchTask();
+        switchTask.execute();
+    }
+
     public void cancelTasks() {
         if (checkOnlineTask != null) {
             checkOnlineTask.cancel(true);
@@ -64,22 +91,25 @@ public class LedController {
         if (animateTask != null) {
             animateTask.cancel(true);
         }
+        if (switchTask != null) {
+            switchTask.cancel(true);
+        }
     }
 
     private class CheckOnlineTask extends AsyncTask<Void, Void, Boolean> {
 
 
-        public CheckOnlineTask() {}
+        public CheckOnlineTask() {
+        }
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            String url = new StringBuilder(ctx.getString(R.string.controller_endpoint))
-                    .append("/color")
+            String url = new StringBuilder(PreferenceManager.getDefaultSharedPreferences(ctx).getString(PREF_HOST, "http://localhost"))
+                    .append("/health")
                     .toString();
             Log.w("LedController", url);
             // Body is empty
             Request request = new Request.Builder()
-                    .header("api-key", ctx.getString(R.string.api_key))
                     .url(url)
                     .build();
 
@@ -99,6 +129,37 @@ public class LedController {
         }
     }
 
+    private class SwitchTask extends AsyncTask<Void, Void, Boolean> {
+
+        public SwitchTask() {
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params) {
+            String url = new StringBuilder(PreferenceManager.getDefaultSharedPreferences(ctx).getString(PREF_HOST, "http://localhost"))
+                    .append("/switch")
+                    .toString();
+            // Body is empty
+            RequestBody body = RequestBody.create(JSON, "{}");
+            Request request = new Request.Builder()
+                    .header("x-api-key", PreferenceManager.getDefaultSharedPreferences(ctx).getString(PREF_KEY, ""))
+                    .url(url)
+                    .post(body)
+                    .build();
+            try {
+                Response response = client.newCall(request).execute();
+                return response.code() == 200;
+            } catch (IOException e) {
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean success) {
+            l.onSwitched(success);
+        }
+    }
+
     private class ChangeColorTask extends AsyncTask<Void, Void, Boolean> {
 
         int red;
@@ -113,7 +174,7 @@ public class LedController {
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            String url = new StringBuilder(ctx.getString(R.string.controller_endpoint))
+            String url = new StringBuilder(PreferenceManager.getDefaultSharedPreferences(ctx).getString(PREF_HOST, "http://localhost"))
                     .append("/color?red=")
                     .append(red)
                     .append("&green=")
@@ -124,7 +185,7 @@ public class LedController {
             // Body is empty
             RequestBody body = RequestBody.create(JSON, "{}");
             Request request = new Request.Builder()
-                    .header("api-key", ctx.getString(R.string.api_key))
+                    .header("x-api-key", PreferenceManager.getDefaultSharedPreferences(ctx).getString(PREF_KEY, ""))
                     .url(url)
                     .post(body)
                     .build();
@@ -159,7 +220,7 @@ public class LedController {
 
         @Override
         protected Boolean doInBackground(Void... params) {
-            String url = new StringBuilder(ctx.getString(R.string.controller_endpoint))
+            String url = new StringBuilder(PreferenceManager.getDefaultSharedPreferences(ctx).getString(PREF_HOST, "http://localhost"))
                     .append("/animate?red=")
                     .append(red)
                     .append("&green=")
@@ -172,7 +233,7 @@ public class LedController {
             // Body is empty
             RequestBody body = RequestBody.create(JSON, "{}");
             Request request = new Request.Builder()
-                    .header("api-key", ctx.getString(R.string.api_key))
+                    .header("x-api-key", PreferenceManager.getDefaultSharedPreferences(ctx).getString(PREF_KEY, ""))
                     .url(url)
                     .post(body)
                     .build();

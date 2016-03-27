@@ -43,7 +43,7 @@ local setcolor = function(r, g, b, dontsave)
  end
  pwm.setduty(2, duty)
 
- if not (dontsave == nil) then
+ if dontsave == nil then
   -- Save changes to file
   file.open("led.defaults", "w+")
   file.writeline("0") --color mode
@@ -237,7 +237,7 @@ local switchonoff = function()
   elseif mode == 1 then
    -- switch off
    tmr.stop(0)
-   setcolor(0, 0, 0)
+   setcolor(0, 0, 0, true)
    mode = 0
   end
  end

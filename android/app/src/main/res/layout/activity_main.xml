@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#222"
-    tools:context=".Main">
+    tools:context=".MainActivity">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -13,7 +13,11 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-
+            <ImageButton
+                android:id="@+id/btn_power"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@drawable/power"/>
             <com.larswerkman.holocolorpicker.ColorPicker
                 android:id="@+id/picker"
                 android:layout_width="wrap_content"
