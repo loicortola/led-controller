@@ -102,6 +102,24 @@ local createloop = function(red, green, blue)
  end
 end
 
+local createblinkloop = function(red, green, blue)
+ local currentstate = 0
+
+ return function()
+  if currentstate == 1 then
+   pwm.setduty(5, red)
+   pwm.setduty(6, green)
+   pwm.setduty(2, blue)
+   currentstate = 0
+  else
+   pwm.setduty(5, 0)
+   pwm.setduty(6, 0)
+   pwm.setduty(2, 0)
+   currentstate = 1
+  end
+ end
+end
+
 local readanimation = function()
  local r, g, b, looptime
  if file.open("animate.defaults", "r") then
@@ -166,4 +184,44 @@ local startanimation = function(r, g, b, looptime)
  createloop = nil
 end
 
-return {readcolor = readcolor, readanimation = readanimation, getcolor = getcolor, setcolor = setcolor, stopanimation = stopanimation, startanimation = startanimation}
+local startblink = function(r, g, b)
+ local looptime = 1000
+ 
+ -- Initial state is color
+ pwm.setduty(5, r)
+ pwm.setduty(6, g)
+ pwm.setduty(2, b)
+ tmr.stop(0)
+ tmr.alarm(0, looptime, 1, createblinkloop(r, g, b))
+ 
+end
+
+local initpwm = function()
+ -- Init
+ local frequency = 250
+ pwm.setup(5, frequency, 1023)
+ pwm.start(5)
+ pwm.setup(6, frequency, 1023)
+ pwm.start(6)
+ pwm.setup(2, frequency, 1023)
+ pwm.start(2)
+end
+
+local loaddefaults = function()
+ local mode, data
+ if file.open("led.defaults", "r") then
+  -- Read mode
+  mode = tonumber(file.readline());
+  if mode == 0 then
+   data = readcolor()
+   setcolor(data.r, data.g, data.b)
+  elseif mode == 1 then
+   data = readanimation()
+   startanimation(data.r, data.g, data.b, data.looptime)
+  end
+ else
+  setcolor(255, 255, 255)
+ end
+end
+
+return {initpwm = initpwm, loaddefaults = loaddefaults, startblink = startblink, readcolor = readcolor, readanimation = readanimation, getcolor = getcolor, setcolor = setcolor, stopanimation = stopanimation, startanimation = startanimation}

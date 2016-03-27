@@ -3,10 +3,11 @@ local f = loadfile('router.lc')
 local router = f()
 f = nil
 collectgarbage("collect")
-router.post("/animate", "animate.post.lc")
-router.delete("/animate", "animate.delete.lc")
-router.get("/color", "color.get.lc")
-router.post("/color", "color.post.lc")
+router.post("/animate", "routes/animate.post.lc")
+router.delete("/animate", "routes/animate.delete.lc")
+router.get("/color", "routes/color.get.lc")
+router.post("/color", "routes/color.post.lc")
+router.get("/health", "routes/health.get.lc")
 local h = router.handler
 router = nil
 return h

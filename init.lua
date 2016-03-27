@@ -1,45 +1,66 @@
-wifi.setmode(wifi.STATION)
-wifi.sta.config("DarthVader", "loicortola")
-wifi.sta.connect()
-print("---------------------------")
-print("Welcome to Loic's super MCU")
-print("Connecting to Wifi")
-tmr.alarm(1, 1000, 1, function()
- if wifi.sta.getip() == nil then
-  print("IP unavailable, Waiting...")
+local wificontroller = loadfile("service/wificontroller.lc")() 
+local ledcontroller = loadfile("service/ledcontroller.lc")()
+
+-- Default conf for wifi
+wifi.ap.dhcp.stop()
+wifi.sleeptype(wifi.NONE_SLEEP)
+wifi.setphymode(wifi.PHYMODE_N)
+
+-- Init PWM
+ledcontroller.initpwm()
+-- Load default colors
+ledcontroller.loaddefaults()
+
+local error = function()
+ -- Too many attempts: Failed
+ tmr.stop(1)
+ ledcontroller.stopanimation()
+ -- Blink red
+ ledcontroller.startblink(255, 0, 0)
+ -- Remove settings
+ file.remove("wifi.settings")
+end
+
+if file.open("wifi.settings", "r") then
+ -- Wifi settings exist. Start system
+ local cred = wificontroller.readcredentials()
+ 
+ -- Set mode Station
+ wifi.setmode(wifi.STATION)
+ print("------------------------------")
+ print("LED CONTROLLER by Loic Ortola")
+ print("------------------------------")
+ print("Connect attempt to SSID: '" .. cred.ssid .. "'")
+ success, res = pcall(wifi.sta.config, cred.ssid, cred.key)
+ if success then
+  wifi.sta.connect()
  else
-  tmr.stop(1)
-  print("MAC address is: " .. wifi.ap.getmac())
-  print("IP is " .. wifi.sta.getip())
-  -- Init
-  local frequency = 250
-  pwm.setup(5, frequency, 0)
-  pwm.start(5)
-  pwm.setup(6, frequency, 0)
-  pwm.start(6)
-  pwm.setup(2, frequency, 0)
-  pwm.start(2)
-  
-  -- Set to normal mode
-  local mode, data
-  local loader = loadfile("ledcontroller.lc")
-  local ledcontroller = loader()
-  
-  if file.open("led.defaults", "r") then
-   mode = tonumber(file.readline());
-   if mode == 0 then
-    data = ledcontroller.readcolor()
-    ledcontroller.setcolor(data.r, data.g, data.b)
-   elseif mode == 1 then
-    data = ledcontroller.readanimation()
-    ledcontroller.startanimation(data.r, data.g, data.b, data.looptime)
-   end
-  else
-   ledcontroller.setcolor(255, 255, 255)
-  end
-  loader = nil
-  ledcontroller = nil
-  
-  --dofile("server.lua")
+  error()
+  return
  end
-end)
+ local attempts = 0
+ ledcontroller.startblink(255, 165, 0)
+ tmr.alarm(1, 1000, 1, function()
+  attempts = attempts + 1
+  if wifi.sta.getip() == nil then
+   print("IP unavailable, Waiting...")
+  else
+   tmr.stop(1)
+   print("MAC address is: " .. wifi.ap.getmac())
+   print("IP is " .. wifi.sta.getip())
+   ledcontroller.stopanimation()
+   -- Load default colors
+   ledcontroller.loaddefaults()
+   dofile("server.lc")
+  end
+  if attempts > 30 then
+   error()
+  end
+ end)
+else
+ print("No wifi settings. Setup Mode")
+ -- Initial color code is blue => waiting for setup
+ wificontroller.setupAP()
+ dofile("server_setup.lc")
+ ledcontroller.startblink(0, 0, 255)
+end

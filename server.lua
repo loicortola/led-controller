@@ -3,7 +3,9 @@ do
  local port = 80
  print("Heap after http : " .. tostring(node.heap()))
  
- local server = espress.createserver(port)
- server:use("auth_api_key.lc", {apikey = "799f7400-1612-4994-b84d-19e205f9eff9"})
+ local server = espress.createserver()
+ local wificontroller = loadfile("service/wificontroller.lc")()
+ server:use("auth_api_key.lc", {apikey = wificontroller.readcredentials().password, excludes = "/health"})
  server:use("routes_custom.lc")
+ server:listen(80)
 end
