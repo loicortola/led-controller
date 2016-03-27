@@ -9,14 +9,14 @@ local readcolor = function()
   g = 255
   b = 255
  end
- return {r = r, g = g, b = b}
+ return { r = r, g = g, b = b }
 end
 
 local getcolor = function()
  return { r = pwm.getduty(5) / 4, g = pwm.getduty(6) / 4, b = pwm.getduty(2) / 4 }
 end
 
-local setcolor = function(r, g, b)
+local setcolor = function(r, g, b, dontsave)
  local duty
 
  duty = r * 4
@@ -43,17 +43,19 @@ local setcolor = function(r, g, b)
  end
  pwm.setduty(2, duty)
 
- -- Save changes to file
- file.open("led.defaults", "w+")
- file.writeline("0") --color mode
- file.flush()
- file.close()
- file.open("color.defaults", "w+")
- file.writeline(tostring(r))
- file.writeline(tostring(g))
- file.writeline(tostring(b))
- file.flush()
- file.close()
+ if not (dontsave == nil) then
+  -- Save changes to file
+  file.open("led.defaults", "w+")
+  file.writeline("0") --color mode
+  file.flush()
+  file.close()
+  file.open("color.defaults", "w+")
+  file.writeline(tostring(r))
+  file.writeline(tostring(g))
+  file.writeline(tostring(b))
+  file.flush()
+  file.close()
+ end
 end
 
 local createloop = function(red, green, blue)
@@ -133,7 +135,7 @@ local readanimation = function()
   b = 255
   looptime = 10000
  end
- return {r = r, g = g, b = b, looptime = looptime}
+ return { r = r, g = g, b = b, looptime = looptime }
 end
 
 local stopanimation = function()
@@ -160,14 +162,14 @@ local startanimation = function(r, g, b, looptime)
  -- Maximum interval is looptime / (6 * 255)
  local steps = b * 2 + g * 2 + r * 2
  local interval = looptime / steps
- 
+
  -- Initial state is red
  pwm.setduty(5, r)
  pwm.setduty(6, 0)
  pwm.setduty(2, 0)
  tmr.stop(0)
  tmr.alarm(0, interval, 1, createloop(r, g, b))
- 
+
  -- Save changes to file
  file.open("led.defaults", "w+")
  file.writeline("1") --animate mode
@@ -180,20 +182,19 @@ local startanimation = function(r, g, b, looptime)
  file.writeline(tostring(looptime))
  file.flush()
  file.close()
- 
+
  createloop = nil
 end
 
 local startblink = function(r, g, b)
  local looptime = 1000
- 
+
  -- Initial state is color
  pwm.setduty(5, r)
  pwm.setduty(6, g)
  pwm.setduty(2, b)
  tmr.stop(0)
  tmr.alarm(0, looptime, 1, createblinkloop(r, g, b))
- 
 end
 
 local initpwm = function()
@@ -224,4 +225,35 @@ local loaddefaults = function()
  end
 end
 
-return {initpwm = initpwm, loaddefaults = loaddefaults, startblink = startblink, readcolor = readcolor, readanimation = readanimation, getcolor = getcolor, setcolor = setcolor, stopanimation = stopanimation, startanimation = startanimation}
+local switchonoff = function()
+ local mode = 1
+ if file.open("led.switch", "r") then
+  -- Read mode
+  mode = tonumber(file.readline());
+  if mode == 0 then
+   -- switch on
+   loaddefaults()
+   mode = 1
+  elseif mode == 1 then
+   -- switch off
+   tmr.stop(0)
+   setcolor(0, 0, 0)
+   mode = 0
+  end
+ end
+
+ -- Save changes to file
+ file.open("led.switch", "w+")
+ file.writeline(mode) --color mode
+ file.flush()
+ file.close()
+end
+
+local ison = function()
+ if file.open("led.switch", "r") then
+  return tonumber(file.readline()) == 1
+ end
+ return 0
+end
+
+return { initpwm = initpwm, loaddefaults = loaddefaults, switchonoff = switchonoff, ison = ison, startblink = startblink, readcolor = readcolor, readanimation = readanimation, getcolor = getcolor, setcolor = setcolor, stopanimation = stopanimation, startanimation = startanimation }

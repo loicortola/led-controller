@@ -18,7 +18,7 @@ return function(req, res)
   looptime = tonumber(req.params.loopTime)
  end
  
- local loader = loadfile("ledcontroller.lc")
+ local loader = loadfile("service/ledcontroller.lc")
  local ledcontroller = loader()
  
  ledcontroller.startanimation(r, g, b, looptime)

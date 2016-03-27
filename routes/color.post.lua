@@ -8,7 +8,7 @@ return function(req, res)
   r = tonumber(req.params.red);
   g = tonumber(req.params.green);
   b = tonumber(req.params.blue);
-  local loader = loadfile("ledcontroller.lc")
+  local loader = loadfile("service/ledcontroller.lc")
   local ledcontroller = loader()
 
   ledcontroller.setcolor(r, g, b)

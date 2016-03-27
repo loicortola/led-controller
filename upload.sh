@@ -18,6 +18,8 @@ nodemcu-tool upload routes/health.get.lua -k --compile --optimize --port $1 --ba
 nodemcu-tool upload routes/register.post.lua -k --compile --optimize --port $1 --baud $baud
 nodemcu-tool upload routes/restart.post.lua -k --compile --optimize --port $1 --baud $baud
 nodemcu-tool upload routes/ssids.get.lua -k --compile --optimize --port $1 --baud $baud
+nodemcu-tool upload routes/switch.get.lua -k --compile --optimize --port $1 --baud $baud
+nodemcu-tool upload routes/switch.post.lua -k --compile --optimize --port $1 --baud $baud
 nodemcu-tool upload init.lua -k --port $1 --baud $baud
 nodemcu-tool upload service/ledcontroller.lua -k --compile --optimize --port $1 --baud $baud
 nodemcu-tool upload service/wificontroller.lua -k --compile --optimize --port $1 --baud $baud
