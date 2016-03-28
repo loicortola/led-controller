@@ -2,6 +2,9 @@
 
 All-in-one Smartphone-controlled Led Controller for NodeMCU (ESP-8266).  
 
+## Requirements
+
+Requires NodeMCU 1.5+ with CJSON, PWM, mDNS, file, net, tmr, wifi
 
 ## Setup
 
@@ -25,3 +28,11 @@ You can safely reboot (take off the plug, and plug it on again) your LED Control
 
 ### 2. Updates
 Any Wifi network/password change will require the LED Controller to be setup once again. This is a safety measure.
+
+### 3. Android App
+When you have installed the APK on your phone, simply launch it and click on "Re-Sync" in the settings tab.
+Make sure you are connected on the same wifi network as your LED Controller.
+
+When your Controller is successfully found, a Dialog will pop-up so you can enter your password key.
+
+You're done! The Controller is now successfully paired to your Android App!

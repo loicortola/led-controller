@@ -1,4 +1,4 @@
-package com.loicortola.ledcontroller;
+package com.loicortola.controller.service;
 
 import android.content.Context;
 import android.graphics.Color;

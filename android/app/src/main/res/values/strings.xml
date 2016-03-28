@@ -2,8 +2,15 @@
     <string name="app_name">LedController</string>
 
     <string name="action_sync">Re-Sync</string>
-    <string name="btn_change_label">Change Color</string>
-    <string name="btn_animate_label">Animate</string>
+    <string name="switch_label">Switch on/off</string>
+    <string name="change_label">Change Color</string>
+    <string name="animate_label">Animate</string>
     <string name="key">Controller Password Key</string>
+    <string name="title_activity_drawer">DrawerActivity</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="default_device_name">Device X</string>
+    <string name="action_settings">Settings</string>
 
 </resources>

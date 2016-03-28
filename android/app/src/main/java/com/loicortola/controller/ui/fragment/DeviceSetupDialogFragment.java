@@ -1,30 +1,43 @@
-package com.loicortola.ledcontroller;
+package com.loicortola.controller.ui.fragment;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.DialogFragment;
+
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
+import com.loicortola.ledcontroller.R;
+
 /**
  * Created by loic on 27/03/2016.
  */
-public class ChangeSettingsDialogFragment extends DialogFragment {
+public class DeviceSetupDialogFragment extends DialogFragment {
+
+    public static final String ARG_DEVICE_ID = "device_id";
+
+    public static DeviceSetupDialogFragment newInstance(String deviceId) {
+        DeviceSetupDialogFragment d = new DeviceSetupDialogFragment();
+        Bundle bundle = new Bundle();
+        bundle.putString(ARG_DEVICE_ID, deviceId);
+        d.setArguments(bundle);
+        return d;
+    }
 
     private OnSettingsChangedListener l;
 
     public interface OnSettingsChangedListener {
-        void onSettingsChanged(String key);
+        void onSecretKeySubmit(String deviceId, String key);
     }
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        l = (OnSettingsChangedListener) activity;
+    public void setTargetFragment(Fragment fragment, int requestCode) {
+        super.setTargetFragment(fragment, requestCode);
+        l = (OnSettingsChangedListener) fragment;
     }
 
     @Override
@@ -32,6 +45,8 @@ public class ChangeSettingsDialogFragment extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         // Get the layout inflater
         LayoutInflater inflater = getActivity().getLayoutInflater();
+
+        final String deviceId = getArguments().getString(ARG_DEVICE_ID);
 
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
@@ -41,12 +56,12 @@ public class ChangeSettingsDialogFragment extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        l.onSettingsChanged(((TextView)rootView.findViewById(R.id.key)).getText().toString());
+                        l.onSecretKeySubmit(deviceId, ((TextView)rootView.findViewById(R.id.key)).getText().toString());
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        ChangeSettingsDialogFragment.this.getDialog().cancel();
+                        DeviceSetupDialogFragment.this.getDialog().cancel();
                     }
                 });
         return builder.create();

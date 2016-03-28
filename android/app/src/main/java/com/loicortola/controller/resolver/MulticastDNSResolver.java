@@ -1,50 +1,60 @@
-package com.loicortola.ledcontroller;
+package com.loicortola.controller.resolver;
 
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
+import android.os.Handler;
 import android.util.Log;
 
 /**
  * Created by loic on 27/03/2016.
  */
-public class MulticastDNSResolver {
+public class MulticastDNSResolver implements Runnable {
 
-    public interface OnServiceResolved {
+    public interface OnServiceResolvedListener {
         void onServiceResolved(NsdServiceInfo info);
     }
 
     private static final String TAG = MulticastDNSResolver.class.getName();
+    private static final long TIMEOUT_MILLIS = 30000;
 
     private final String serviceType;
-    private final String serviceName;
-    private final OnServiceResolved listener;
+    private final OnServiceResolvedListener listener;
     private final NsdManager nsdManager;
+    private NsdManager.DiscoveryListener discoveryListener;
+    private Runnable stopper;
+    private Handler handler;
 
-    public MulticastDNSResolver(Context ctx, String serviceType, String searchString, OnServiceResolved listener) {
+    public MulticastDNSResolver(Context ctx, Handler handler, String serviceType, OnServiceResolvedListener listener) {
         this.serviceType = serviceType;
-        this.serviceName = searchString;
         this.nsdManager = (NsdManager) ctx.getSystemService(Context.NSD_SERVICE);
         this.listener = listener;
+        this.handler = handler;
+        this.stopper = new Runnable() {
+            @Override
+            public void run() {
+                // Stop after cycle is finished
+                stop();
+            }
+        };
+        // Stop after 30 seconds
+        handler.postDelayed(stopper, TIMEOUT_MILLIS);
+    }
+
+    @Override
+    public void run() {
         initializeDiscoveryListener();
     }
 
-    public void initializeDiscoveryListener() {
-        final NsdManager.ResolveListener resolveListener = new NsdManager.ResolveListener() {
-            @Override
-            public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                Log.w(TAG, "Fail!: " + serviceInfo.toString() + " : " + errorCode);
-            }
+    public void stop() {
+        nsdManager.stopServiceDiscovery(discoveryListener);
+        handler.removeCallbacks(stopper);
+    }
 
-            @Override
-            public void onServiceResolved(NsdServiceInfo serviceInfo) {
-                Log.d(TAG, "Win!: " + serviceInfo);
-                listener.onServiceResolved(serviceInfo);
-            }
-        };
+    private void initializeDiscoveryListener() {
 
         // Instantiate a new DiscoveryListener
-        NsdManager.DiscoveryListener discoveryListener = new NsdManager.DiscoveryListener() {
+        discoveryListener = new NsdManager.DiscoveryListener() {
 
             //  Called as soon as service discovery begins.
             @Override
@@ -56,14 +66,19 @@ public class MulticastDNSResolver {
             public void onServiceFound(NsdServiceInfo service) {
                 // A service was found!  Do something with it.
                 Log.d(TAG, "Service discovery success " + service);
-                if (!service.getServiceType().equals(serviceType)) {
-                    // Service type is the string containing the protocol and
-                    // transport layer for this service.
-                    Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
-                } else if (service.getServiceName().contains(serviceName)) {
+                if (service.getServiceType().equals(serviceType)) {
                     Log.d(TAG, "Found one!: " + service.getServiceName());
-                    nsdManager.resolveService(service, resolveListener);
-                    nsdManager.stopServiceDiscovery(this);
+                    nsdManager.resolveService(service, new NsdManager.ResolveListener() {
+                        @Override
+                        public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
+                            Log.w(TAG, "Fail!: " + serviceInfo.toString() + " : " + errorCode);
+                        }
+
+                        @Override
+                        public void onServiceResolved(NsdServiceInfo serviceInfo) {
+                            listener.onServiceResolved(serviceInfo);
+                        }
+                    });
                 }
             }
 
