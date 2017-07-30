@@ -2,16 +2,15 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
   <meta name="viewport" content="width=device-width"/>
-  <link rel="icon" type="image/png" sizes="96x96" href="favicon-96x96.png"/>
-  <link rel="icon" href="favicon.ico"/>
-  <link rel="stylesheet" type="text/css" href="style.css"/>
-  <script type="text/javascript" src="script.js"></script>
+  <link rel="icon" type="image/png" sizes="96x96" href="static/favicon-96x96.png"/>
+  <link rel="icon" href="static/favicon.ico"/>
+  <link rel="stylesheet" type="text/css" href="static/style.css"/>
 </head>
 <body
     style="font-family: 'Maven Pro',sans-serif; color: #4B4B4B; background-color: #E3E0D3;">
 <form action="#" id="settings">
   <div class="center-div">
-    <img src="favicon-96x96.png" style="display: block"/>
+    <img src="static/favicon-96x96.png" style="display: block"/>
     <br/>
     <table>
       <tr>
@@ -24,7 +23,7 @@
           Select your Wifi
         </td>
         <td id="wap">
-          <img src="spinner.gif"/> Listing Wifi Access Points
+          <img src="static/spinner.gif"/> Listing Wifi Access Points
         </td>
       </tr>
       <tr>
@@ -37,9 +36,7 @@
       </tr>
       <tr>
         <td style="text-align: left">
-          Set your LED Controller password.
-          <br/>
-          Required to bind your controller to your apps
+          Choose a password to protect your device.
         </td>
         <td>
           <input type="password" id="password" name="password" placeholder="Enter LED Controller password here"/>
@@ -62,5 +59,6 @@
   </div>
 
 </form>
+<script type="text/javascript" src="static/script.js"></script>
 </body>
 </html>

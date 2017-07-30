@@ -17,15 +17,19 @@ var request = function (url, method, callback, body) {
     }
   };
   xhttp.open(method, url, true);
+  if (body) {
+    xhttp.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+  }
   xhttp.send(body);
 };
 
 // Called when form is posted
 var postForm = function () {
-  var body = {};
-  body.ssid = document.getElementById("ssid").value;
-  body.key = document.getElementById("key").value;
-  body.password = document.getElementById("password").value;
+  var body = "";
+  body += "ssid=" + document.getElementById("ssid").value;
+  body += "&key=" + document.getElementById("key").value;
+  body += "&password=" + document.getElementById("password").value;
+
   request("api/register", "POST", function (err, result) {
     if (err) {
       document.getElementById("bad-news").innerHTML = "An error occured during registration. Please check all fields are valid, and try again.<br/>Message:" + err.message;
@@ -35,11 +39,19 @@ var postForm = function () {
         console.log("Device Restart: " + !err);
       })
     }
-  }, JSON.stringify(body));
+  }, body);
 };
 
-// Request SSIDS
-request("api/ssids", "GET", function (err, result) {
-  document.getElementById("wap").innerHTML = result;
-  document.getElementById("submit").removeAttribute("disabled");
-});
+var requestSSIDs = function () {
+  // Request SSIDS
+  request("api/ssids", "GET", function (err, result) {
+    if (err) {
+      setTimeout(requestSSIDs, 3000);
+    } else {
+      document.getElementById("wap").innerHTML = result;
+      document.getElementById("submit").removeAttribute("disabled");
+    }
+  });
+}
+
+requestSSIDs();
