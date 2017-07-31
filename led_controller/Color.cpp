@@ -7,15 +7,15 @@ Color::Color(int r, int g, int b) {
   this->b = min(255, max(0, b));
 }
 
-int Color::getR() {
+int Color::getR() const {
   return this->r;
 }
 
-int Color::getG() {
+int Color::getG() const {
   return this->g;
 }
 
-int Color::getB() {
+int Color::getB() const {
   return this->b;
 }
 

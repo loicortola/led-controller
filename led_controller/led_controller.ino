@@ -24,8 +24,6 @@ ColorRequestHandler colorHandler(server, lc);
 PowerRequestHandler powerHandler(server, lc);
 WifiRequestHandler wifiHandler(server, lc, wc);
 
-int c = 0;
-
 void setup(void){
   
   Serial.begin(115200);
@@ -50,25 +48,49 @@ void setup(void){
   server.begin();
 }
 
+bool isAuthenticated(const String& password) {
+  if (!server.hasHeader("Authorization")) {
+    return false;
+  }
+  String apiKey = server.header("Authorization");
+  String validKey = "ApiKey " + password;
+  if (apiKey != validKey) {
+    return false;
+  }
+  return true;
+}
+
+auto authenticate(void (*handler)(), String apiKey) {
+  return [handler, apiKey]() {
+    if (!isAuthenticated(apiKey)) {
+      server.send(401, "application/json charset=utf-8;", "{\"message\":\"You need to provide a valid Authorization Header with your ApiKey\"}");
+      return;
+    }
+    handler();
+  };
+}
+
 void start() {
   lc.loadDefaults();
   wc.connect();
+  String apiKey = dao.getPassword();
   
   // Status route
   server.on("/api/status", HTTP_GET, [statusHandler](){statusHandler.getHandler();});
   
   // Switch route
-  server.on("/api/power", HTTP_POST, [powerHandler](){powerHandler.postHandler();});
+  server.on("/api/power", HTTP_POST, authenticate([powerHandler](){powerHandler.postHandler();}, apiKey));
   
   // Animate route
-  server.on("/api/animate", HTTP_POST, [animationHandler](){animationHandler.postHandler();});
+  server.on("/api/animate", HTTP_POST, authenticate([animationHandler](){animationHandler.postHandler();}, apiKey));
 
   // Color route
-  server.on("/api/color", HTTP_POST, [colorHandler](){colorHandler.postHandler();});
+  server.on("/api/color", HTTP_POST, authenticate([colorHandler](){colorHandler.postHandler();}, apiKey));
 
   // FIXME remove in prod
   server.on("/api/clear", [](){
     dao.clear();
+    server.send(200, "application/json charset=utf-8;", "{\"message\":\"Success\"}");
     ESP.restart();
   });
   
@@ -95,15 +117,16 @@ void configure() {
   server.on("/api/ssids", [wifiHandler](){wifiHandler.getHandler();});
   server.on("/api/register", [wifiHandler](){wifiHandler.postHandler();});
   server.on("/api/restart", [](){
+    server.send(200, "application/json charset=utf-8;", "{\"message\":\"Success\"}");
     ESP.restart();
   });
   server.on("/api/clear", [](){
     dao.clear();
+    server.send(200, "application/json charset=utf-8;", "{\"message\":\"Success\"}");
     ESP.restart();
   });
   // Serve static files
   SPIFFS.begin();
-  Serial.println("Mounted filesystem");
   server.serveStatic("/", SPIFFS, "/index.html");
   server.serveStatic("/static/", SPIFFS, "/");
 }

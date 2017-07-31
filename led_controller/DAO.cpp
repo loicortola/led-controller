@@ -87,11 +87,11 @@ void DAO::storeLoopTime(int loopTimeMs) {
 String DAO::readString(int offset) {
   String result;
   int i = 0;
-  char c;
+  char c = char(EEPROM.read(offset));
   while(c != '\0') {
-    c = char(EEPROM.read(offset + i));
-    i++;
     result += c;
+    i++;
+    c = char(EEPROM.read(offset + i));
   }
   return result;
 }

@@ -3,6 +3,14 @@
 #include "Color.h"
 
 Animation::Animation(int r, int g, int b, int loopTime) {
+  init(r, g, b, loopTime, NULL);
+}
+
+Animation::Animation(int r, int g, int b, int loopTime, Color* target) {
+  init(r, g, b, loopTime, target);
+}
+
+void Animation::init(int r, int g, int b, int loopTime, Color* target) {
   this->r = min(255, max(0, r));
   this->g = min(255, max(0, g));
   this->b = min(255, max(0, b));
@@ -11,25 +19,75 @@ Animation::Animation(int r, int g, int b, int loopTime) {
   // Initial state is dark, matches state 0
   this->currentColor = new Color(0, 0, 0);
   this->currentState = -1;
+  // Animation type
+  if (target == NULL) {
+    this->type = 1; // Simple color wheel animation
+  } else {
+    this->type = 2; // Color to color (C2C) animation
+    this->targetColor = target;
+  }
 }
 
-int Animation::getR() {
+int Animation::getR() const {
   return this->r;
 }
 
-int Animation::getG() {
+int Animation::getG() const {
   return this->g;
 }
 
-int Animation::getB() {
+int Animation::getB() const {
   return this->b;
 }
 
-int Animation::getLoopTime() {
+int Animation::getLoopTime() const {
   return this->loopTime;
 }
 
+bool Animation::operator==(Color const& otherColor) const {
+  return (this->getR() == otherColor.getR() && this->getG() == otherColor.getG() && this->getB() == otherColor.getB());
+}
+
 Color* Animation::getNextColor() {
+  if (this->type == 1) {
+    return getNextColorTypeWheel();
+  } else {
+    return getNextColorTypeC2C();
+  }
+}
+
+Color* Animation::getNextColorTypeC2C() {
+  int increment = 1;
+  int r = 0;
+  int g = 0;
+  int b = 0;
+  int c = 0;
+
+  // Next r
+  c = this->currentColor->getR();
+  if (c < this->r) {
+    r = c + increment;
+  } else if (c > this->r) {
+    r = c - increment;
+  }
+  // Next g
+  c = this->currentColor->getG();
+  if (c < this->g) {
+    g = c + increment;
+  } else if (c > this->g) {
+    g = c - increment;
+  }
+  // Next b
+  c = this->currentColor->getB();
+  if (c < this->b) {
+    b = c + increment;
+  } else if (c > this->b) {
+    b = c - increment;
+  }
+  return new Color(r, g, b);
+}
+
+Color* Animation::getNextColorTypeWheel() {
   int c = 0;
   int increment = 2;
   Color* oldColor = currentColor;
@@ -96,4 +154,3 @@ Color* Animation::getNextColor() {
   }
   return this->currentColor;
 }
-
