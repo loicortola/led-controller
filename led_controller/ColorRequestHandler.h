@@ -19,20 +19,24 @@ public:
     for(int i = 0; i < server->args();i++) {
       String argName = server->argName(i);
       if (argName == "red") {
-        red = strtoi(server->arg(i));
+        red = server->arg(i).toInt();
       } else if (argName == "green") {
-          green = strtoi(server->arg(i));
+          green = server->arg(i).toInt();
       } else if (argName == "blue") {
-          blue = strtoi(server->arg(i));
+          blue = server->arg(i).toInt();
       } else if (argName == "swiping") {
           isSwiping = true;
       }
     }
     if (red + green + blue > 0) {
       if (isSwiping) {
-        lc->changeColor(new Color(red, green, blue));
+        Color* c = new Color(red, green, blue);
+        lc->changeColor(c);
+        delete c;
       } else {
-        lc->setColor(new Color(red, green, blue));
+        Color* c = new Color(red, green, blue);
+        lc->setColor(c);
+        delete c;
       }
       server->send(200, "application/json charset=UTF-8;", "{\"message\": \"Success\"}");
     } else {

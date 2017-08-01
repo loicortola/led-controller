@@ -94,8 +94,8 @@ void WifiController::connect() {
     }
     return;
   }
-  lc->stopAnimation();
   if (!wasConnectedBefore) {
+    lc->stopAnimation();
     // We didn't have a good wifi status before. First connection sets the light blue
     lc->setColor(new Color(0, 0, 255));
     dao->storeState(STATE_WIFISTATUS, true);

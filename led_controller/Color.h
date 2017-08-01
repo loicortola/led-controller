@@ -1,3 +1,5 @@
+class Print;
+
 class Color {
 public:
   Color(int r, int g, int b);
@@ -7,6 +9,9 @@ public:
   Color* withR(int r);
   Color* withG(int g);
   Color* withB(int b);
+  Color* clone();
+  void printTo(Print& dest);
+  bool operator ==(Color const& c) const;
 private:
   int r;
   int g;

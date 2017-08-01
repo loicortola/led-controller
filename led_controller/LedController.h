@@ -3,6 +3,7 @@ extern "C" {
 }
 class Color;
 class Animation;
+class AnimationSet;
 class DAO;
 
 #ifndef LED_R_PIN
@@ -16,6 +17,8 @@ class DAO;
 #ifndef LED_B_PIN
 #define LED_B_PIN 14
 #endif
+
+#define MAX_ANIMATIONS_IN_SET 6
 
 /**
  * The Led Controller controls all the leds of the Beacon
@@ -37,16 +40,22 @@ public:
   void changeColor(Color* c);
   void setColor(Color* c);
   Animation* getAnimation();
+  AnimationSet* getAnimationSet();
   void blink(Color* color);
   void animate(Animation* a);
+  void animateSet(AnimationSet* as);
   void onAnimationTick();
   void stopAnimation();
 private:
   DAO* dao;
   Animation* currentAnimation;
+  AnimationSet* currentAnimationSet;
+  int currentAnimationStep;
   Color* currentBlink;
   os_timer_t timer;
   bool blinking;
   void startBlinking(Color* c);
   void startAnimation(Animation* a);
+  void startAnimationSet(AnimationSet* as);
+  void clearAnimations();
 };

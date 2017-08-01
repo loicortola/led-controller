@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "LedController.h"
 #include "Animation.h"
+#include "AnimationSet.h"
 #include "Color.h"
 #include "DAO.h"
 extern "C" {
@@ -14,6 +15,7 @@ extern "C" {
  */
 LedController::LedController(DAO* dao) {
   this->dao = dao;
+  this->currentAnimationStep = -1;
 }
 
 void onTick(void* instance) {
@@ -25,7 +27,9 @@ void LedController::begin() {
   os_timer_setfn(&(this->timer), onTick , this);
 
   // Initialize color
-  this->changeColor(new Color(0, 0, 0));
+  Color* black = new Color(0, 0, 0);
+  this->changeColor(black);
+  delete black;
 }
 
 void LedController::update() {
@@ -33,13 +37,13 @@ void LedController::update() {
 
 void LedController::stop() {
   this->blinking = false;
-  this->changeColor(new Color(0,0,0));
+  switchOff();
   os_timer_disarm(&(this->timer));
 }
 
 void LedController::loadDefaults() {
     if (!this->isSwitchedOn()) {
-      this->changeColor(new Color(0,0,0));
+      switchOff();
       return;
     }
     switchOn();
@@ -63,19 +67,27 @@ void LedController::switchOn() {
     }
   } else if (mode == 1) {
     // Plain Color mode
-    this->changeColor(this->getColor());
+    Color *c = this->getColor();
+    this->changeColor(c);
+    delete c;
   } else if (mode == 2) {
     // Animate mode
     this->startAnimation(this->getAnimation());
+  } else if (mode == 3) {
+    // AnimateSet mode
+    this->startAnimationSet(this->getAnimationSet());
   }
 }
 
 void LedController::switchOff() {
   if (this->getMode() != 0) {
     // SwitchOff is used internally with blink mode
-    this->stopAnimation();
+    stopAnimation();
+    clearAnimations();
   }
-  this->changeColor(new Color(0,0,0));
+  Color* black = new Color(0,0,0);
+  this->changeColor(black);
+  delete black;
   dao->storeState(STATE_SWITCH, false);
 }
 
@@ -129,6 +141,24 @@ void LedController::startAnimation(Animation* a) {
   os_timer_arm(&(this->timer), triggerMs, true);
 }
 
+void LedController::startAnimationSet(AnimationSet* as) {
+  if (this->currentAnimationStep == as->getSize()) {
+    this->currentAnimationStep = 0;
+  }
+  if (currentAnimationStep == -1) {
+    Animation* firstAnim = as->getItems()[0];
+    currentAnimation = new Animation(0,0,0, firstAnim->getLoopTime(), new Color(firstAnim->getR(), firstAnim->getG(), firstAnim->getB()));
+  } else {
+    currentAnimation = as->getItems()[currentAnimationStep]->clone();
+    currentAnimation->reset();
+  }
+  int ops = max(max(abs(currentAnimation->getR() - currentAnimation->getTargetColor()->getR()),
+                    abs(currentAnimation->getG() - currentAnimation->getTargetColor()->getG())),
+                    abs(currentAnimation->getB() - currentAnimation->getTargetColor()->getB()));
+  int triggerMs = currentAnimation->getLoopTime() / ops;
+  os_timer_arm(&(this->timer), triggerMs, true);
+}
+
 void LedController::startBlinking(Color* c) {
   // Blink every second
   os_timer_arm(&(this->timer), 1000, true);
@@ -139,27 +169,62 @@ Animation* LedController::getAnimation() {
     Color* c = dao->getColor();
     int loopTime = dao->getLoopTime();
     this->currentAnimation = new Animation(c->getR(), c->getG(), c->getB(), loopTime);
+    delete c;
   }
   return currentAnimation;
+}
+
+AnimationSet* LedController::getAnimationSet() {
+  if (this->currentAnimationSet == NULL) {
+    AnimationSet* as = dao->getAnimationSet();
+    this->currentAnimationSet = as;
+  }
+  return currentAnimationSet;
 }
 
 void LedController::onAnimationTick() {
   if (blinking) {
     this->toggle();
   } else {
-    this->changeColor(this->currentAnimation->getNextColor());
+    if (this->currentAnimation->isFinished()) {
+      this->stopAnimation();
+      delete this->currentAnimation;
+      this->currentAnimation = NULL;
+      this->currentAnimationStep++;
+      this->startAnimationSet(this->currentAnimationSet);
+    } else {
+      this->changeColor(this->currentAnimation->getNextColor());
+    }
   }
+}
+
+void LedController::clearAnimations() {
+  delete this->currentAnimationSet;
+  delete this->currentAnimation;
+  this->currentAnimationStep = -1;
+  this->currentAnimation = NULL;
+  this->currentAnimationSet = NULL;
 }
 
 void LedController::animate(Animation* a) {
   this->stopAnimation();
-  if (this->currentAnimation != NULL) {
-    delete this->currentAnimation;
-  }
+  this->clearAnimations();
   this->currentAnimation = a;
-  dao->storeColor(new Color(a->getR(), a->getG(), a->getB()));
+  Color* initialColor = new Color(a->getR(), a->getG(), a->getB());
+  dao->storeColor(initialColor);
+  delete initialColor;
   dao->storeLoopTime(a->getLoopTime());
   this->setMode(2);
   this->switchOn();
-  this->startAnimation(a);
+}
+
+
+void LedController::animateSet(AnimationSet* as) {
+  this->stopAnimation();
+  this->clearAnimations();
+  this->currentAnimationSet = as;
+  dao->storeAnimationSet(as);
+  this->setMode(3);
+  yield();
+  this->switchOn();
 }

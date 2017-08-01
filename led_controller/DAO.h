@@ -1,4 +1,5 @@
 class Color;
+class AnimationSet;
 
 #define STATE_CONFIGURED 1
 #define STATE_WIFISTATUS 2
@@ -30,6 +31,8 @@ public:
   void storeColor(Color* color);
   int getLoopTime();
   void storeLoopTime(int loopTimeMs);
+  AnimationSet* getAnimationSet();
+  void storeAnimationSet(AnimationSet* as);
   void clear();
 private:
   String readString(int offset);

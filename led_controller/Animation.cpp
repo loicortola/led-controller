@@ -2,6 +2,11 @@
 #include "Animation.h"
 #include "Color.h"
 
+Animation::~Animation(void) {
+  delete this->currentColor;
+  delete this->targetColor;
+}
+
 Animation::Animation(int r, int g, int b, int loopTime) {
   init(r, g, b, loopTime, NULL);
 }
@@ -22,6 +27,7 @@ void Animation::init(int r, int g, int b, int loopTime, Color* target) {
   // Animation type
   if (target == NULL) {
     this->type = 1; // Simple color wheel animation
+    this->targetColor = NULL;
   } else {
     this->type = 2; // Color to color (C2C) animation
     this->targetColor = target;
@@ -44,8 +50,17 @@ int Animation::getLoopTime() const {
   return this->loopTime;
 }
 
+
+int Animation::getType() const {
+  return this->type;
+}
+
+Animation* Animation::clone() {
+  return new Animation(r, g, b, loopTime, targetColor->clone());
+}
+
 bool Animation::operator==(Color const& otherColor) const {
-  return (this->getR() == otherColor.getR() && this->getG() == otherColor.getG() && this->getB() == otherColor.getB());
+  return (this->r == otherColor.getR() && this->g == otherColor.getG() && this->b == otherColor.getB());
 }
 
 Color* Animation::getNextColor() {
@@ -56,35 +71,73 @@ Color* Animation::getNextColor() {
   }
 }
 
+Color* Animation::getTargetColor() {
+  return targetColor;
+}
+
 Color* Animation::getNextColorTypeC2C() {
   int increment = 1;
   int r = 0;
   int g = 0;
   int b = 0;
   int c = 0;
-
+  Color* oldColor = currentColor;
   // Next r
   c = this->currentColor->getR();
-  if (c < this->r) {
+  if (c < this->targetColor->getR()) {
     r = c + increment;
-  } else if (c > this->r) {
+  } else if (c > this->targetColor->getR()) {
     r = c - increment;
   }
   // Next g
   c = this->currentColor->getG();
-  if (c < this->g) {
+  if (c < this->targetColor->getG()) {
     g = c + increment;
-  } else if (c > this->g) {
+  } else if (c > this->targetColor->getG()) {
     g = c - increment;
   }
   // Next b
   c = this->currentColor->getB();
-  if (c < this->b) {
+  if (c < this->targetColor->getB()) {
     b = c + increment;
-  } else if (c > this->b) {
+  } else if (c > this->targetColor->getB()) {
     b = c - increment;
   }
-  return new Color(r, g, b);
+  this->currentColor = new Color(r, g, b);
+  delete oldColor;
+  return this->currentColor;
+}
+
+bool Animation::isFinished() {
+  return this->getType() == 2 && (*(this->currentColor) == *(this->targetColor));
+}
+void Animation::reset() {
+  if (this->type != 2) {
+    return;
+  }
+  if (this->currentColor) {
+    delete this->currentColor;
+  }
+  this->currentColor = new Color(r, g, b);
+}
+void Animation::printTo(Print& dest) {
+  dest.print("Animation:{r:");
+  dest.print(this->r);
+  dest.print(",g:");
+  dest.print(this->g);
+  dest.print(",b:");
+  dest.print(this->b);
+  dest.print(",loopTime:");
+  dest.print(this->loopTime);
+  if (this->currentColor != NULL) {
+    dest.print(",currentColor:");
+    this->currentColor->printTo(dest);
+  }
+  if (this->targetColor != NULL) {
+    dest.print(",targetColor:");
+    this->targetColor->printTo(dest);
+  }
+  dest.print("}");
 }
 
 Color* Animation::getNextColorTypeWheel() {

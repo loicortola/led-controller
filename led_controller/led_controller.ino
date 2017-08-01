@@ -131,8 +131,13 @@ void configure() {
   server.serveStatic("/static/", SPIFFS, "/");
 }
 
+int c = 0;
 void loop(void){
   server.handleClient();
   SSDPDevice.handleClient();
+  if (c++ == 40000) {
+    c = 0;
+    Serial.println(ESP.getFreeHeap());
+  }
   yield();
 }

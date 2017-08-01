@@ -16,7 +16,7 @@ public:
     for(int i = 0; i < server->args();i++) {
       String argName = server->argName(i);
       if (argName == "power") {
-        power = strtoi(server->arg(i));
+        power = server->arg(i).toInt();
       }
     }
     if (power == 1) {

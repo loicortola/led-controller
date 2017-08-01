@@ -2,6 +2,8 @@
 #include <Arduino.h>
 #include "DAO.h"
 #include "Color.h"
+#include "AnimationSet.h"
+#include "Animation.h"
 #define EEPROM_SSID 0 // Max Length 32 bytes
 #define EEPROM_KEY 32 // Max Length 64 bytes
 #define EEPROM_PASSWORD 96 // Max Length 32 bytes
@@ -11,6 +13,7 @@
 #define EEPROM_G 131
 #define EEPROM_B 132
 #define EEPROM_LOOPTIME_100MS 133
+#define EEPROM_ANIMATIONSET 134 // S | R | G | B | T | R | G | B | T ...
 
 DAO::DAO() {
   EEPROM.begin(192);
@@ -81,6 +84,32 @@ int DAO::getLoopTime() {
 }
 void DAO::storeLoopTime(int loopTimeMs) {
   storeByte(EEPROM_LOOPTIME_100MS, loopTimeMs / 100);
+  EEPROM.commit();
+}
+AnimationSet* DAO::getAnimationSet() {
+  int size = readByte(EEPROM_ANIMATIONSET);
+  Animation* as[size];
+  for(int i = 0; i < size; i++) {
+    as[i] = new Animation(readByte(EEPROM_ANIMATIONSET + 1 + 4 * i),
+                          readByte(EEPROM_ANIMATIONSET + 2 + 4 * i),
+                          readByte(EEPROM_ANIMATIONSET + 3 + 4 * i),
+                          readByte(EEPROM_ANIMATIONSET + 4 + 4 * i) * 100);
+  }
+  AnimationSet* result = new AnimationSet(as, size);
+  for (int i = 0; i < size; i++) {
+    delete as[i];
+  }
+  return result;
+}
+void DAO::storeAnimationSet(AnimationSet* as) {
+  // Store size in first byte.
+  storeByte(EEPROM_ANIMATIONSET, as->getSize());
+  for (int i = 0; i < as->getSize(); i++) {
+    storeByte(EEPROM_ANIMATIONSET + 1 + 4 * i, as->getItems()[i]->getR());
+    storeByte(EEPROM_ANIMATIONSET + 2 + 4 * i, as->getItems()[i]->getG());
+    storeByte(EEPROM_ANIMATIONSET + 3 + 4 * i, as->getItems()[i]->getB());
+    storeByte(EEPROM_ANIMATIONSET + 4 + 4 * i, as->getItems()[i]->getLoopTime() / 100);
+  }
   EEPROM.commit();
 }
 

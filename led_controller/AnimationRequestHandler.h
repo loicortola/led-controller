@@ -1,5 +1,6 @@
 #include <ESP8266WebServer.h>
 #include "Utils.h"
+#include "AnimationSet.h"
 
 class LedController;
 
@@ -40,18 +41,31 @@ private:
     }
   }
   void handleC2CAnimation() {
-    Animation* animationSet[6];
+    Animation* animationSet[MAX_ANIMATIONS_IN_SET];
     int c = 0;
     for(int i = 0; i < server->args();i++) {
       String argName = server->argName(i);
       if (argName == "step") {
-        if (c < 6) {
-          animationSet[c++] = parseStep(server->arg(i));
+        if (c < MAX_ANIMATIONS_IN_SET) {
+          Animation* a = parseStep(server->arg(i));
+          if (a != NULL) {
+            animationSet[c++] = a;
+          }
         }
+      }
+    }
+    if (c < 2) {
+      server->send(400, "application/json charset=UTF-8;", "{\"message\": \"Invalid Parameters. Please supply a list of at least 2 'step' arguments. Example: yourUrl?step=255,0,0,4000&step=0,255,0,4000 . Values are R,G,B,durationInMs.\"}");
+    }
+    lc->animateSet(new AnimationSet(animationSet, c));
+    for (int i = 0; i < c; i++) {
+      if (animationSet[i] != NULL) {
+        delete animationSet[i];
       }
     }
     server->send(200, "application/json charset=UTF-8;", "{\"message\": \"Success\"}");
   }
+
   Animation* parseStep(String step) {
     if (step == NULL || step.length() == 0) {
       return NULL;
