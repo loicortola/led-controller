@@ -1,9 +1,6 @@
 #include <ESP8266Webserver.h>
-#include "Utils.h"
 
 class LedController;
-
-using namespace conversion;
 
 class ColorRequestHandler {
 public:
@@ -29,15 +26,13 @@ public:
       }
     }
     if (red + green + blue > 0) {
+      Color* c = new Color(red, green, blue);
       if (isSwiping) {
-        Color* c = new Color(red, green, blue);
         lc->changeColor(c);
-        delete c;
       } else {
-        Color* c = new Color(red, green, blue);
         lc->setColor(c);
-        delete c;
       }
+      delete c;
       server->send(200, "application/json charset=UTF-8;", "{\"message\": \"Success\"}");
     } else {
       server->send(400, "application/json charset=UTF-8;", "{\"message\": \"Invalid Parameters. Please supply the following query parameters: red, green, and blue between 0 and 255.\"}");

@@ -1,9 +1,6 @@
 #include <ESP8266Webserver.h>
-#include "Utils.h"
 
 class LedController;
-
-using namespace conversion;
 
 class PowerRequestHandler {
 public:

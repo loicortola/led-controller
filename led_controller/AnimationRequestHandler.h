@@ -1,10 +1,8 @@
 #include <ESP8266WebServer.h>
-#include "Utils.h"
 #include "AnimationSet.h"
 
 class LedController;
 
-using namespace conversion;
 
 class AnimationRequestHandler {
 public:
@@ -13,26 +11,24 @@ public:
     this->lc = &lc;
   }
   void postHandler() {
-    if (!server->hasArg("type")) {
-      server->send(400, "application/json charset=UTF-8;", "{\"message\": \"Invalid Parameters. Please supply an animation 'type' parameter.\"}");
-      return;
+    int type = 1;
+    if (server->hasArg("type")) {
+      type = server->arg("type").toInt();
     }
-    int type = strtoi(server->arg("type"));
     if (type == 1) {
       handleWheelAnimation();
-    } else {
+    } else if (type == 2) {
       handleC2CAnimation();
     }
-
   }
 private:
   ESP8266WebServer* server;
   LedController* lc;
   void handleWheelAnimation() {
-    int red = strtoi(server->arg("red"));
-    int green = strtoi(server->arg("green"));
-    int blue = strtoi(server->arg("blue"));
-    int loopTime = strtoi(server->arg("looptime"));
+    int red = server->arg("red").toInt();
+    int green = server->arg("green").toInt();
+    int blue = server->arg("blue").toInt();
+    int loopTime = server->arg("looptime").toInt();
     if (red + green + blue > 0) {
       lc->animate(new Animation(red, green, blue, loopTime));
       server->send(200, "application/json charset=UTF-8;", "{\"message\": \"Success\"}");
