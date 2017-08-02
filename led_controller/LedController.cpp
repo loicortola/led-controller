@@ -131,6 +131,7 @@ void LedController::changeColor(Color* c) {
 
 void LedController::stopAnimation() {
   os_timer_disarm(&(this->timer));
+  blinking = false;
 }
 
 void LedController::startAnimation(Animation* a) {
