@@ -15,7 +15,7 @@ class DAO;
 #endif
 
 #ifndef LED_B_PIN
-#define LED_B_PIN 14
+#define LED_B_PIN 15
 #endif
 
 #define MAX_ANIMATIONS_IN_SET 6

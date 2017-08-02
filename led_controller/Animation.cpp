@@ -83,25 +83,25 @@ Color* Animation::getNextColorTypeC2C() {
   int c = 0;
   Color* oldColor = currentColor;
   // Next r
-  c = this->currentColor->getR();
-  if (c < this->targetColor->getR()) {
-    r = c + increment;
-  } else if (c > this->targetColor->getR()) {
-    r = c - increment;
+  r = this->currentColor->getR();
+  if (r < this->targetColor->getR()) {
+    r += increment;
+  } else if (r > this->targetColor->getR()) {
+    r -= increment;
   }
   // Next g
-  c = this->currentColor->getG();
-  if (c < this->targetColor->getG()) {
-    g = c + increment;
-  } else if (c > this->targetColor->getG()) {
-    g = c - increment;
+  g = this->currentColor->getG();
+  if (g < this->targetColor->getG()) {
+    g += increment;
+  } else if (g > this->targetColor->getG()) {
+    g -= increment;
   }
   // Next b
-  c = this->currentColor->getB();
-  if (c < this->targetColor->getB()) {
-    b = c + increment;
-  } else if (c > this->targetColor->getB()) {
-    b = c - increment;
+  b = this->currentColor->getB();
+  if (b < this->targetColor->getB()) {
+    b += increment;
+  } else if (b > this->targetColor->getB()) {
+    b -= increment;
   }
   this->currentColor = new Color(r, g, b);
   delete oldColor;
@@ -164,7 +164,11 @@ Color* Animation::getNextColorTypeWheel() {
     case 1:
       // Step 1: From (r,0,b) to (r,0,0)
       c = this->currentColor->getB();
-      if (c > 0) {
+      if (this->r <= 5) {
+        // This step should be skipped. So we are going forward.
+        this->currentState = 6;
+        break;
+      } else if (c > 0) {
         this->currentColor = currentColor->withB(c - increment);
         break;
       }
@@ -180,7 +184,11 @@ Color* Animation::getNextColorTypeWheel() {
     case 3:
       // Step 3: From (r,g,0) to (0,g,0)
       c = this->currentColor->getR();
-      if (c > 0) {
+      if (this->g <= 5) {
+        // This step should be skipped. So we are going forward.
+        this->currentState = 7;
+        break;
+      } else if (c > 0) {
         this->currentColor = currentColor->withR(c - increment);
         break;
       }
@@ -196,11 +204,61 @@ Color* Animation::getNextColorTypeWheel() {
     case 5:
       // Step 5: From (0,g,b) to (0,0,b)
       c = this->currentColor->getG();
-      if (c > 0) {
+      if (this->b <= 5) {
+        // This step should be skipped. So we are going forward.
+        this->currentState = 8;
+        break;
+      } else if (c > 0) {
         this->currentColor = currentColor->withG(c - increment);
         break;
       }
       this->currentState = 0;
+      break;
+    case 6:
+      // Special case 1. R was negligible.
+      // Step 6: From (0,0,b) to (0,g,b), then (0,g,b) to (0,g,0)
+      c = this->currentColor->getG();
+      if (c < this->g) {
+        this->currentColor = currentColor->withG(c + increment);
+        break;
+      }
+      c = this->currentColor->getB();
+      if (c > 0) {
+        this->currentColor = currentColor->withB(c - increment);
+        break;
+      }
+      this->currentState = 4;
+      break;
+    case 7:
+      // Special case 2. G was negligible.
+      // Step 7: From (r,0,0) to (r,0,b), then (r,0,b) to (0,0,b)
+      c = this->currentColor->getB();
+      if (c < this->b) {
+        this->currentColor = currentColor->withB(c + increment);
+        break;
+      }
+      c = this->currentColor->getR();
+      if (c > 0) {
+        this->currentColor = currentColor->withR(c - increment);
+        break;
+      }
+      this->currentState = 0;
+      break;
+    case 8:
+      // Special case 3. B was negligible.
+      // Step 8: From (0,g,0) to (r,g,0), then (r,g,0) to (r,0,0)
+      c = this->currentColor->getR();
+      if (c < this->r) {
+        this->currentColor = currentColor->withR(c + increment);
+        break;
+      }
+      c = this->currentColor->getG();
+      if (c > 0) {
+        this->currentColor = currentColor->withG(c - increment);
+        break;
+      }
+      this->currentState = 2;
+      break;
   }
   if (oldColor != currentColor) {
     delete oldColor;

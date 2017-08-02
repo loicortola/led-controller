@@ -152,9 +152,10 @@ void LedController::startAnimationSet(AnimationSet* as) {
     currentAnimation = as->getItems()[currentAnimationStep]->clone();
     currentAnimation->reset();
   }
-  int ops = max(max(abs(currentAnimation->getR() - currentAnimation->getTargetColor()->getR()),
+  currentAnimation->printTo(Serial);
+  int ops = max(1, max(max(abs(currentAnimation->getR() - currentAnimation->getTargetColor()->getR()),
                     abs(currentAnimation->getG() - currentAnimation->getTargetColor()->getG())),
-                    abs(currentAnimation->getB() - currentAnimation->getTargetColor()->getB()));
+                    abs(currentAnimation->getB() - currentAnimation->getTargetColor()->getB())));
   int triggerMs = currentAnimation->getLoopTime() / ops;
   os_timer_arm(&(this->timer), triggerMs, true);
 }
@@ -193,7 +194,8 @@ void LedController::onAnimationTick() {
       this->currentAnimationStep++;
       this->startAnimationSet(this->currentAnimationSet);
     } else {
-      this->changeColor(this->currentAnimation->getNextColor());
+      Color* c = this->currentAnimation->getNextColor();
+      this->changeColor(c);
     }
   }
 }
