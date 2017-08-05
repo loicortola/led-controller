@@ -1,12 +1,12 @@
 <resources>
-    <string name="app_name">LedController</string>
+    <string name="app_name">IoT Controller</string>
 
     <string name="action_sync">Re-Sync</string>
     <string name="switch_label">Switch on/off</string>
     <string name="change_label">Change Color</string>
     <string name="animate_label">Animate</string>
     <string name="key">Controller Password Key</string>
-    <string name="title_activity_drawer">DrawerActivity</string>
+    <string name="title_activity_drawer">IoT Controller</string>
 
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>

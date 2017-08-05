@@ -25,7 +25,7 @@ public class LedStripTypeResolver implements DeviceTypeResolver<LedStripRemoteCo
 
     @Override
     public boolean supports(NsdServiceInfo info) {
-        return info.getServiceName().startsWith("led-");
+        return info.getServiceName().startsWith("led-") || info.getServiceName().toLowerCase().startsWith("resourcepool led controller");
     }
 
     @Override

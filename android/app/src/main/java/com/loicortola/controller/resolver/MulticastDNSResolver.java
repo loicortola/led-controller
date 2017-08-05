@@ -71,7 +71,11 @@ public class MulticastDNSResolver implements Runnable {
                     nsdManager.resolveService(service, new NsdManager.ResolveListener() {
                         @Override
                         public void onResolveFailed(NsdServiceInfo serviceInfo, int errorCode) {
-                            Log.w(TAG, "Fail!: " + serviceInfo.toString() + " : " + errorCode);
+                            if (errorCode != 3) {
+                                Log.w(TAG, "Fail!: " + serviceInfo.toString() + " : " + errorCode);
+                            } else {
+                                listener.onServiceResolved(serviceInfo);
+                            }
                         }
 
                         @Override
