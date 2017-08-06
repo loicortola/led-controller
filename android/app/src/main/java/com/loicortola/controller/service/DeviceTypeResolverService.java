@@ -8,6 +8,8 @@ import com.loicortola.controller.library.ledstrip.resolver.LedStripTypeResolver;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.resourcepool.jarpic.model.SsdpService;
+
 /**
  * Created by loic on 28/03/2016.
  */
@@ -17,7 +19,6 @@ public class DeviceTypeResolverService {
 
     public DeviceTypeResolverService() {
         typeResolvers = new ArrayList<>();
-        // TODO annotation based TypeResolvers
         typeResolvers.add(new LedStripTypeResolver());
     }
 
@@ -35,6 +36,15 @@ public class DeviceTypeResolverService {
     }
 
     public DeviceTypeResolver get(NsdServiceInfo info) {
+        for (DeviceTypeResolver r : typeResolvers) {
+            if (r.supports(info)) {
+                return r;
+            }
+        }
+        return null;
+    }
+
+    public DeviceTypeResolver get(SsdpService info) {
         for (DeviceTypeResolver r : typeResolvers) {
             if (r.supports(info)) {
                 return r;

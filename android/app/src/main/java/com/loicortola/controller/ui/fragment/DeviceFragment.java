@@ -21,6 +21,7 @@ import com.loicortola.controller.model.Device;
 import com.loicortola.ledcontroller.R;
 import com.loicortola.controller.service.DeviceService;
 
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -38,10 +39,6 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
     private RecyclerView.LayoutManager mLayoutManager;
     private DeviceService mDeviceService;
     private NavigationListener l;
-    public static DeviceFragment newInstance() {
-        DeviceFragment f = new DeviceFragment();
-        return f;
-    }
 
     @Override
     public void onAttach(Context context) {
@@ -77,7 +74,7 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
                 });
             }
         });
-
+        // FIXME I know. UI Thread stuff.
         List<Device> all = mDeviceService.getAll();
         mAdapter = new DeviceAdapter(all, this);
         mRecyclerView.setAdapter(mAdapter);
@@ -87,6 +84,7 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
 
     @Override
     public void onSetupBtnClicked(String deviceId) {
+        // FIXME I know. UI Thread stuff.
         Device device = mDeviceService.get(deviceId);
         if (device.getKey() == null && device.getResolver().isSecure()) {
             // Device is secured, no key was yet specified.
@@ -102,6 +100,13 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
     }
 
     @Override
+    public void onCardLongClicked(String deviceId) {
+        // FIXME I know. UI Thread stuff.
+        mDeviceService.remove(deviceId);
+        updateItems(mDeviceService.getAll());
+    }
+
+    @Override
     public void onSecretKeySubmit(String deviceId, final String key) {
         final Device device = mDeviceService.get(deviceId);
 
@@ -111,6 +116,7 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
             public void onValidityChecked(boolean valid) {
                 if (valid) {
                     device.setKey(key);
+                    // FIXME I know. UI Thread stuff.
                     mDeviceService.save(device);
                     Toast.makeText(getActivity(), "Secret Key Updated successfully", Toast.LENGTH_LONG).show();
                     updateItems(mDeviceService.getAll());
@@ -123,7 +129,7 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
     }
 
     private void updateItems(List<Device> devices) {
-        mAdapter.setItems(mDeviceService.getAll());
+        mAdapter.setItems(devices == null ? new LinkedList<Device>() : devices);
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {

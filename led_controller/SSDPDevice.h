@@ -83,22 +83,15 @@ static const char* PROGMEM SSDP_SCHEMA_TEMPLATE =
 			"<manufacturerURL>%s</manufacturerURL>"
 			"<UDN>uuid:%s</UDN>"
 		"</device>"
-//    "<iconList>"
-//      "<icon>"
-//        "<mimetype>image/png</mimetype>"
-//        "<height>48</height>"
-//        "<width>48</width>"
-//        "<depth>24</depth>"
-//        "<url>icon48.png</url>"
-//      "</icon>"
-//      "<icon>"
-//       "<mimetype>image/png</mimetype>"
-//       "<height>120</height>"
-//       "<width>120</width>"
-//       "<depth>24</depth>"
-//       "<url>icon120.png</url>"
-//      "</icon>"
-//    "</iconList>"
+    "<iconList>"
+      "<icon>"
+       "<mimetype>image/png</mimetype>"
+       "<height>96</height>"
+       "<width>96</width>"
+       "<depth>24</depth>"
+       "<url>static/favicon-96x96.png</url>"
+      "</icon>"
+    "</iconList>"
 	"</root>\r\n"
 	"\r\n";
 
@@ -117,7 +110,7 @@ typedef enum {
 
 typedef struct {
 	unsigned long time;
-	
+
 	ssdp_message_t type;
 	ssdp_udn_t udn;
 	uint32_t address;
@@ -141,7 +134,7 @@ private:
 	char m_modelName[SSDP_MODEL_NAME_SIZE];
 	char m_modelURL[SSDP_MODEL_URL_SIZE];
 	char m_modelNumber[SSDP_MODEL_VERSION_SIZE];
-	
+
 	uint16_t m_port;
 	uint8_t m_ttl;
 
@@ -155,7 +148,7 @@ protected:
 	void postResponse(long mx);
 	void postResponse(ssdp_udn_t udn, long mx);
 	void post(ssdp_message_t type, ssdp_udn_t udn, IPAddress address, uint16_t port, unsigned long time);
-	
+
 	void send(ssdp_send_parameters_t *parameters);
 public:
 	SSDPDeviceClass();
@@ -194,4 +187,3 @@ public:
 extern SSDPDeviceClass SSDPDevice;
 
 #endif
-

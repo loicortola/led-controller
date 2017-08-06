@@ -38,7 +38,7 @@ public class LedStripRemoteControl implements Switchable, Colorable, Secured, An
 
     @Override
     public void setColor(int c, final OnColorSetListener l) {
-        service.setColor(d.getKey(), Color.red(c), Color.green(c), Color.blue(c)).enqueue(new Callback() {
+        service.setColor("ApiKey " + d.getKey(), Color.red(c), Color.green(c), Color.blue(c)).enqueue(new Callback() {
             @Override
             public void onResponse(Call call, Response response) {
                 l.onColorSet(true);
@@ -73,7 +73,7 @@ public class LedStripRemoteControl implements Switchable, Colorable, Secured, An
 
     @Override
     public void isActive(final OnSwitchListener l) {
-        Call<Boolean> call = service.isActive(d.getKey());
+        Call<Boolean> call = service.isActive("ApiKey " + d.getKey());
 
         call.enqueue(new Callback<Boolean>() {
             @Override
@@ -90,7 +90,7 @@ public class LedStripRemoteControl implements Switchable, Colorable, Secured, An
 
     @Override
     public void switchOn(final OnSwitchListener l) {
-        service.switchOnOff(d.getKey()).enqueue(new Callback() {
+        service.switchOnOff("ApiKey " + d.getKey()).enqueue(new Callback() {
             @Override
             public void onResponse(Call call, Response response) {
                 l.onActiveResult(true);
@@ -105,7 +105,7 @@ public class LedStripRemoteControl implements Switchable, Colorable, Secured, An
 
     @Override
     public void switchOff(final OnSwitchListener l) {
-        service.switchOnOff(d.getKey()).enqueue(new Callback() {
+        service.switchOnOff("ApiKey " + d.getKey()).enqueue(new Callback() {
             @Override
             public void onResponse(Call call, Response response) {
                 l.onActiveResult(false);
@@ -120,7 +120,7 @@ public class LedStripRemoteControl implements Switchable, Colorable, Secured, An
 
     @Override
     public void isValid(String key, final OnValidityCheckedListener l) {
-        service.getColor(key).enqueue(new Callback<com.loicortola.controller.library.ledstrip.model.Color>() {
+        service.getColor("ApiKey " + key).enqueue(new Callback<com.loicortola.controller.library.ledstrip.model.Color>() {
             @Override
             public void onResponse(Call<com.loicortola.controller.library.ledstrip.model.Color> call, Response<com.loicortola.controller.library.ledstrip.model.Color> response) {
                 l.onValidityChecked(response.code() == 200);
@@ -136,7 +136,7 @@ public class LedStripRemoteControl implements Switchable, Colorable, Secured, An
 
     @Override
     public void animate(Animation a, final OnAnimationSetListener l) {
-        service.setAnimation(d.getKey(), Color.red(a.c), Color.green(a.c), Color.blue(a.c), a.animationTime).enqueue(new Callback() {
+        service.setAnimation("ApiKey " + d.getKey(), Color.red(a.c), Color.green(a.c), Color.blue(a.c), a.animationTime).enqueue(new Callback() {
             @Override
             public void onResponse(Call call, Response response) {
                 l.onAnimationSet(true);
@@ -151,7 +151,7 @@ public class LedStripRemoteControl implements Switchable, Colorable, Secured, An
 
     @Override
     public void isHealthy(final OnHealthCheckListener l) {
-        service.checkHealth(d.getKey()).enqueue(new Callback<ResponseBody>() {
+        service.checkHealth("ApiKey " + d.getKey()).enqueue(new Callback<ResponseBody>() {
             @Override
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 l.onHealthCheck(response.code() == 200);

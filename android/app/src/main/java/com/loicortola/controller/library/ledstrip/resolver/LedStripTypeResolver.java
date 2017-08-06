@@ -13,6 +13,8 @@ import com.loicortola.controller.model.Device;
 import com.loicortola.controller.resolver.DeviceTypeResolver;
 import com.loicortola.ledcontroller.R;
 
+import io.resourcepool.jarpic.model.SsdpService;
+
 /**
  * Created by loic on 28/03/2016.
  */
@@ -26,6 +28,11 @@ public class LedStripTypeResolver implements DeviceTypeResolver<LedStripRemoteCo
     @Override
     public boolean supports(NsdServiceInfo info) {
         return info.getServiceName().startsWith("led-") || info.getServiceName().toLowerCase().startsWith("resourcepool led controller");
+    }
+
+    @Override
+    public boolean supports(SsdpService service) {
+        return  service.getServiceType().equals("urn:schemas-upnp-org:device:DimmableRGBLight:2");
     }
 
     @Override
@@ -60,6 +67,17 @@ public class LedStripTypeResolver implements DeviceTypeResolver<LedStripRemoteCo
                 .name(info.getServiceName())
                 .icon(R.drawable.led_strip)
                 .host("http://" + info.getHost().getHostAddress() + ":" + info.getPort())
+                .resolver(this)
+                .build();
+    }
+
+    @Override
+    public Device resolve(SsdpService service) {
+        return Device.builder()
+                .id(service.getSerialNumber())
+                .name("Led-Strip" + service.getSerialNumber().substring(service.getSerialNumber().length() - 6))
+                .icon(R.drawable.led_strip)
+                .host("http://" + service.getRemoteIp().getHostAddress() + ":80")
                 .resolver(this)
                 .build();
     }

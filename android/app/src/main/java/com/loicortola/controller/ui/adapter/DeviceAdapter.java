@@ -37,12 +37,13 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
     public interface DeviceCardClickListener {
         void onSetupBtnClicked(String deviceId);
         void onCardClicked(String deviceId);
+        void onCardLongClicked(String deviceId);
     }
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
-    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, Secured.OnValidityCheckedListener, Switchable.OnSwitchListener, Colorable.OnColorGetListener, HealthAware.OnHealthCheckListener {
+    public static class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, Secured.OnValidityCheckedListener, Switchable.OnSwitchListener, Colorable.OnColorGetListener, HealthAware.OnHealthCheckListener, View.OnLongClickListener {
 
         public String deviceId;
         public View rootView;
@@ -65,6 +66,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
             mDeviceName = (TextView) v.findViewById(R.id.device_name);
             mSetupBtn = (FloatingActionButton) v.findViewById(R.id.btn_setup);
             mSetupBtn.setOnClickListener(this);
+            rootView.setOnLongClickListener(this);
         }
 
         @Override
@@ -81,6 +83,12 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
                     }
                     break;
             }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            l.onCardLongClicked(deviceId);
+            return false;
         }
 
         @Override

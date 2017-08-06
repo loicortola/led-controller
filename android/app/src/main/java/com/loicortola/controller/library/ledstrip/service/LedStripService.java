@@ -13,23 +13,23 @@ import retrofit2.http.Query;
  * Created by loic on 28/03/2016.
  */
 public interface LedStripService {
-    @GET("color")
-    Call<Color> getColor(@Header("X-Api-Key") String key);
+    @GET("api/color")
+    Call<Color> getColor(@Header("Authorization") String key);
 
-    @POST("color")
-    Call<ResponseBody> setColor(@Header("X-Api-Key") String key, @Query("red") int red, @Query("green") int green, @Query("blue") int blue);
+    @POST("api/color")
+    Call<ResponseBody> setColor(@Header("Authorization") String key, @Query("red") int red, @Query("green") int green, @Query("blue") int blue);
 
-    @POST("animate")
-    Call<ResponseBody> setAnimation(@Header("X-Api-Key") String key, @Query("red") int red, @Query("green") int green, @Query("blue") int blue, @Query("loopTime") long loopTime);
+    @POST("api/animate")
+    Call<ResponseBody> setAnimation(@Header("Authorization") String key, @Query("red") int red, @Query("green") int green, @Query("blue") int blue, @Query("looptime") long loopTime);
 
-    @GET("switch")
-    Call<Boolean> isActive(@Header("X-Api-Key") String key);
+    @GET("api/status")
+    Call<Boolean> isActive(@Header("Authorization") String key);
 
-    @POST("switch")
-    Call<ResponseBody> switchOnOff(@Header("X-Api-Key") String key);
+    @POST("api/switch")
+    Call<ResponseBody> switchOnOff(@Header("Authorization") String key);
 
     @GET("health")
-    Call<ResponseBody> checkHealth(@Header("X-Api-Key") String key);
+    Call<ResponseBody> checkHealth(@Header("Authorization") String key);
 
 
 }

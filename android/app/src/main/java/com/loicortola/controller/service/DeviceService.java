@@ -13,8 +13,11 @@ import com.loicortola.controller.persistence.DeviceMapper;
 import com.loicortola.controller.model.Device;
 import com.loicortola.controller.resolver.DeviceTypeResolver;
 import com.loicortola.controller.resolver.MulticastDNSResolver;
+import com.loicortola.controller.resolver.SSDPResolver;
 
 import java.util.List;
+
+import io.resourcepool.jarpic.model.SsdpService;
 
 /**
  * Created by loic on 28/03/2016.
@@ -27,10 +30,16 @@ public class DeviceService {
     private DaoSession daoSession;
     private DeviceDao deviceDao;
     private DeviceMapper deviceMapper;
-    private MulticastDNSResolver resolver;
+    private SSDPResolver ssdpResolver;
+    private MulticastDNSResolver mDNSResolver;
     private DeviceTypeResolverService deviceTypeResolverService;
 
     private static final String TAG = DeviceService.class.getSimpleName();
+
+    public void remove(String deviceId) {
+        Device device = get(deviceId);
+        deviceDao.deleteByKey(device.getDbId());
+    }
 
     public interface OnDeviceResolvedListener {
         void onDeviceResolved(Device d);
@@ -87,11 +96,15 @@ public class DeviceService {
     }
 
     public void refresh(final OnDeviceResolvedListener l) {
-        if (resolver != null) {
-            resolver.stop();
+        if (mDNSResolver != null) {
+            mDNSResolver.stop();
         }
 
-        resolver = new MulticastDNSResolver(ctx, mHandler, "_http._tcp.", new MulticastDNSResolver.OnServiceResolvedListener() {
+        if (ssdpResolver != null) {
+            ssdpResolver.stop();
+        }
+
+        mDNSResolver = new MulticastDNSResolver(ctx, mHandler, "_http._tcp.", new MulticastDNSResolver.OnServiceResolvedListener() {
             @Override
             public void onServiceResolved(NsdServiceInfo info) {
                 DeviceTypeResolver resolver = deviceTypeResolverService.get(info);
@@ -109,7 +122,27 @@ public class DeviceService {
                 }
             }
         });
-        resolver.run();
+        mDNSResolver.run();
+
+        ssdpResolver = new SSDPResolver(ctx, mHandler, new SSDPResolver.OnServiceResolvedListener() {
+            @Override
+            public void onServiceResolved(SsdpService service) {
+                DeviceTypeResolver resolver = deviceTypeResolverService.get(service);
+                if (resolver != null) {
+                    Device newDevice = resolver.resolve(service);
+                    Log.d(TAG, "Service discovery success for device " + newDevice);
+                    if (!exists(newDevice.getId())) {
+                        // Save or update device
+                        save(newDevice);
+                    }
+                    // Callback
+                    if (l != null) {
+                        l.onDeviceResolved(newDevice);
+                    }
+                }
+            }
+        });
+        ssdpResolver.run();
     }
 
 }

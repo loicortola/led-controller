@@ -25,10 +25,10 @@ PowerRequestHandler powerHandler(server, lc);
 WifiRequestHandler wifiHandler(server, lc, wc);
 
 void setup(void){
-  
+
   Serial.begin(115200);
   Serial.println("");
-  
+
   // First thing to do is load the leds
   lc.begin();
   // Then load wifi controller
@@ -74,13 +74,13 @@ void start() {
   lc.loadDefaults();
   wc.connect();
   String apiKey = dao.getPassword();
-  
+
   // Status route
   server.on("/api/status", HTTP_GET, [statusHandler](){statusHandler.getHandler();});
-  
+
   // Switch route
   server.on("/api/power", HTTP_POST, authenticate([powerHandler](){powerHandler.postHandler();}, apiKey));
-  
+
   // Animate route
   server.on("/api/animate", HTTP_POST, authenticate([animationHandler](){animationHandler.postHandler();}, apiKey));
 
@@ -93,11 +93,14 @@ void start() {
     server.send(200, "application/json charset=utf-8;", "{\"message\":\"Success\"}");
     ESP.restart();
   });
-  
+
   // SSDP route
   server.on("/description.xml", HTTP_GET, []() {
     SSDPDevice.schema(server.client());
   });
+  // Serve static files
+  SPIFFS.begin();
+  server.serveStatic("/static/", SPIFFS, "/");
   String name = "Led Controller " + String(ESP.getChipId());
   SSDPDevice.setName(name);
   SSDPDevice.setDeviceType("urn:schemas-upnp-org:device:DimmableRGBLight:2");
@@ -112,7 +115,7 @@ void start() {
 void configure() {
   // Blink green <=> configuration mode
   lc.blink(new Color(0, 255, 0));
-  
+
   // Get SSIDs route
   server.on("/api/ssids", [wifiHandler](){wifiHandler.getHandler();});
   server.on("/api/register", [wifiHandler](){wifiHandler.postHandler();});
