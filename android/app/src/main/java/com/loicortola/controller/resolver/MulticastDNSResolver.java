@@ -13,6 +13,7 @@ public class MulticastDNSResolver implements Runnable {
 
     public interface OnServiceResolvedListener {
         void onServiceResolved(NsdServiceInfo info);
+        void onStopped();
     }
 
     private static final String TAG = MulticastDNSResolver.class.getName();
@@ -49,6 +50,7 @@ public class MulticastDNSResolver implements Runnable {
     public void stop() {
         nsdManager.stopServiceDiscovery(discoveryListener);
         handler.removeCallbacks(stopper);
+        listener.onStopped();
     }
 
     private void initializeDiscoveryListener() {

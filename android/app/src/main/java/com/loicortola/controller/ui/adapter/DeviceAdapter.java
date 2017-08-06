@@ -54,6 +54,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
         public ImageView mWidgetHealthy;
         public FloatingActionButton mSetupBtn;
         public DeviceCardClickListener l;
+        public Boolean isActive;
 
         public ViewHolder(View v, DeviceCardClickListener l) {
             super(v);
@@ -105,6 +106,7 @@ public class DeviceAdapter extends RecyclerView.Adapter<DeviceAdapter.ViewHolder
 
         @Override
         public void onActiveResult(Boolean isActive) {
+            this.isActive = isActive;
             if (isActive != null) {
                 mWidgetSwitch.setImageResource(isActive ? R.drawable.power_on : R.drawable.power_off);
             }

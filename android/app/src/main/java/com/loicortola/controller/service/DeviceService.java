@@ -121,6 +121,11 @@ public class DeviceService {
                     }
                 }
             }
+
+            @Override
+            public void onStopped() {
+                mDNSResolver = null;
+            }
         });
         mDNSResolver.run();
 
@@ -140,6 +145,11 @@ public class DeviceService {
                         l.onDeviceResolved(newDevice);
                     }
                 }
+            }
+
+            @Override
+            public void onStopped() {
+                ssdpResolver = null;
             }
         });
         ssdpResolver.run();

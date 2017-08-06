@@ -22,6 +22,7 @@ public class SSDPResolver implements Runnable {
 
     public interface OnServiceResolvedListener {
         void onServiceResolved(SsdpService service);
+        void onStopped();
     }
 
     private static final String TAG = SSDPResolver.class.getName();
@@ -56,6 +57,7 @@ public class SSDPResolver implements Runnable {
     public void stop() {
         resolver.stopDiscovery();
         handler.removeCallbacks(stopper);
+        listener.onStopped();
     }
 
     private void initializeDiscoveryListener() {
