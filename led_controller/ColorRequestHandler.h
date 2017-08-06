@@ -12,7 +12,7 @@ public:
     int red = 0;
     int green = 0;
     int blue = 0;
-    bool isSwiping = false;
+    bool isHovering = false;
     for(int i = 0; i < server->args();i++) {
       String argName = server->argName(i);
       if (argName == "red") {
@@ -21,13 +21,13 @@ public:
           green = server->arg(i).toInt();
       } else if (argName == "blue") {
           blue = server->arg(i).toInt();
-      } else if (argName == "swiping") {
-          isSwiping = true;
+      } else if (argName == "hover") {
+          isHovering = true;
       }
     }
     if (red + green + blue > 0) {
       Color* c = new Color(red, green, blue);
-      if (isSwiping) {
+      if (isHovering) {
         lc->changeColor(c);
       } else {
         lc->setColor(c);

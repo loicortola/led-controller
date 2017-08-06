@@ -76,7 +76,7 @@ void start() {
   String apiKey = dao.getPassword();
 
   // Status route
-  server.on("/api/status", HTTP_GET, [statusHandler](){statusHandler.getHandler();});
+  server.on("/api/status", HTTP_GET, authenticate([statusHandler](){statusHandler.getHandler();}, apiKey));
 
   // Switch route
   server.on("/api/power", HTTP_POST, authenticate([powerHandler](){powerHandler.postHandler();}, apiKey));
@@ -86,13 +86,6 @@ void start() {
 
   // Color route
   server.on("/api/color", HTTP_POST, authenticate([colorHandler](){colorHandler.postHandler();}, apiKey));
-
-  // FIXME remove in prod
-  server.on("/api/clear", [](){
-    dao.clear();
-    server.send(200, "application/json charset=utf-8;", "{\"message\":\"Success\"}");
-    ESP.restart();
-  });
 
   // SSDP route
   server.on("/description.xml", HTTP_GET, []() {
