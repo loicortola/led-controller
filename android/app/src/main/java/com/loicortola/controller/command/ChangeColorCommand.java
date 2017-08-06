@@ -1,7 +1,5 @@
 package com.loicortola.controller.command;
 
-import android.graphics.Color;
-
 import com.loicortola.controller.command.behavior.Colorable;
 
 /**
@@ -11,16 +9,28 @@ public class ChangeColorCommand implements Command {
 
     private Colorable c;
     private int t;
-    private Colorable.OnColorSetListener l;
+    private boolean hover;
+    private Colorable.OnColorChangedListener l;
 
-    public ChangeColorCommand(Colorable c, int target, Colorable.OnColorSetListener l) {
+    public ChangeColorCommand(Colorable c, int target, Colorable.OnColorChangedListener l) {
         this.c = c;
         this.t = target;
         this.l = l;
     }
 
+    public ChangeColorCommand(Colorable c, int target, boolean hover, Colorable.OnColorChangedListener l) {
+        this.c = c;
+        this.t = target;
+        this.l = l;
+        this.hover = hover;
+    }
+
     @Override
     public void execute() {
-        c.setColor(t, l);
+        if (hover) {
+            c.changeColor(t, l);
+        } else {
+            c.setColor(t, l);
+        }
     }
 }

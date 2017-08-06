@@ -7,6 +7,7 @@ import com.loicortola.controller.command.ChangeColorCommand;
 import com.loicortola.controller.command.CheckHealthCommand;
 import com.loicortola.controller.command.CheckSecretKeyCommand;
 import com.loicortola.controller.command.Command;
+import com.loicortola.controller.command.LoadPresetCommand;
 import com.loicortola.controller.command.SwitchCommand;
 import com.loicortola.controller.library.ledstrip.controller.LedStripRemoteControl;
 import com.loicortola.controller.model.Device;
@@ -57,6 +58,10 @@ public class LedStripTypeResolver implements DeviceTypeResolver<LedStripRemoteCo
             return true;
         }
 
+        if (LoadPresetCommand.class.equals(clazz)) {
+            return true;
+        }
+
         return false;
     }
 
@@ -75,7 +80,7 @@ public class LedStripTypeResolver implements DeviceTypeResolver<LedStripRemoteCo
     public Device resolve(SsdpService service) {
         return Device.builder()
                 .id(service.getSerialNumber())
-                .name("Led-Strip" + service.getSerialNumber().substring(service.getSerialNumber().length() - 6))
+                .name("Led-Strip")
                 .icon(R.drawable.led_strip)
                 .host("http://" + service.getRemoteIp().getHostAddress() + ":80")
                 .resolver(this)
