@@ -18,7 +18,7 @@ import com.loicortola.controller.ui.adapter.DeviceAdapter;
 import com.loicortola.controller.command.CheckSecretKeyCommand;
 import com.loicortola.controller.command.behavior.Secured;
 import com.loicortola.controller.model.Device;
-import com.loicortola.ledcontroller.R;
+import com.loicortola.controller.R;
 import com.loicortola.controller.service.DeviceService;
 
 import java.util.LinkedList;
@@ -70,6 +70,12 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
                         Snackbar.make(view, "Found device " + d.getId(), Snackbar.LENGTH_SHORT)
                                 .setAction("Action", null).show();
                         updateItems(mDeviceService.getAll());
+                    }
+
+                    @Override
+                    public void onStopped() {
+                        Snackbar.make(view, "Discovery finished", Snackbar.LENGTH_SHORT)
+                                .setAction("Action", null).show();
                     }
                 });
             }

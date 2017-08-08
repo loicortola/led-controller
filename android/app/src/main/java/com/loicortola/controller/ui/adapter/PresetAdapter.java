@@ -1,8 +1,6 @@
 package com.loicortola.controller.ui.adapter;
 
 import android.content.Context;
-import android.content.res.Resources;
-import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,19 +8,8 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.loicortola.controller.command.ChangeColorCommand;
-import com.loicortola.controller.command.CheckHealthCommand;
-import com.loicortola.controller.command.CheckSecretKeyCommand;
-import com.loicortola.controller.command.SwitchCommand;
-import com.loicortola.controller.command.behavior.Colorable;
-import com.loicortola.controller.command.behavior.HealthAware;
-import com.loicortola.controller.command.behavior.Secured;
-import com.loicortola.controller.command.behavior.Switchable;
-import com.loicortola.controller.model.Device;
 import com.loicortola.controller.model.Preset;
-import com.loicortola.ledcontroller.R;
-
-import org.w3c.dom.Text;
+import com.loicortola.controller.R;
 
 import java.util.ArrayList;
 import java.util.Collection;

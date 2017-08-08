@@ -2,15 +2,13 @@ package com.loicortola.controller.ui.activity;
 
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.loicortola.controller.ui.fragment.RemoteControlFragment;
-import com.loicortola.ledcontroller.R;
+import com.loicortola.controller.R;
 import com.loicortola.controller.ui.fragment.DeviceFragment;
 
 public class DrawerActivity extends AppCompatActivity implements DeviceFragment.NavigationListener {

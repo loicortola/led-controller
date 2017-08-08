@@ -1,4 +1,4 @@
-package com.loicortola.controller.resolver;
+package com.loicortola.controller.device;
 
 import android.net.nsd.NsdServiceInfo;
 
@@ -18,6 +18,4 @@ public interface DeviceTypeResolver<T> {
     Device resolve(NsdServiceInfo info);
     Device resolve(SsdpService service);
     <T> T getRemoteControl(Device d);
-
-
 }

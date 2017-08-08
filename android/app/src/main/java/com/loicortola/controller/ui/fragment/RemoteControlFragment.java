@@ -31,7 +31,7 @@ import com.loicortola.controller.model.Device;
 import com.loicortola.controller.model.Preset;
 import com.loicortola.controller.service.DeviceService;
 import com.loicortola.controller.ui.adapter.PresetAdapter;
-import com.loicortola.ledcontroller.R;
+import com.loicortola.controller.R;
 
 /**
  * Created by loic on 28/03/2016.

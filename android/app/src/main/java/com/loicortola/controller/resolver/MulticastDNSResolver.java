@@ -6,6 +6,11 @@ import android.net.nsd.NsdServiceInfo;
 import android.os.Handler;
 import android.util.Log;
 
+import com.loicortola.controller.device.DeviceTypeResolver;
+import com.loicortola.controller.device.DeviceTypeResolverService;
+import com.loicortola.controller.model.Device;
+import com.loicortola.controller.service.DeviceService;
+
 /**
  * Created by loic on 27/03/2016.
  */
@@ -20,17 +25,19 @@ public class MulticastDNSResolver implements Runnable {
     private static final long TIMEOUT_MILLIS = 30000;
 
     private final String serviceType;
-    private final OnServiceResolvedListener listener;
+    private final DeviceService.OnDeviceResolvedListener listener;
     private final NsdManager nsdManager;
     private NsdManager.DiscoveryListener discoveryListener;
     private Runnable stopper;
     private Handler handler;
+    private DeviceTypeResolverService deviceTypeResolverService;
 
-    public MulticastDNSResolver(Context ctx, Handler handler, String serviceType, OnServiceResolvedListener listener) {
+    public MulticastDNSResolver(Context ctx, Handler handler, DeviceTypeResolverService deviceTypeResolverService, String serviceType, DeviceService.OnDeviceResolvedListener listener) {
         this.serviceType = serviceType;
         this.nsdManager = (NsdManager) ctx.getSystemService(Context.NSD_SERVICE);
         this.listener = listener;
         this.handler = handler;
+        this.deviceTypeResolverService = deviceTypeResolverService;
         this.stopper = new Runnable() {
             @Override
             public void run() {
@@ -65,7 +72,7 @@ public class MulticastDNSResolver implements Runnable {
             }
 
             @Override
-            public void onServiceFound(NsdServiceInfo service) {
+            public void onServiceFound(final NsdServiceInfo service) {
                 // A service was found!  Do something with it.
                 Log.d(TAG, "Service discovery success " + service);
                 if (service.getServiceType().equals(serviceType)) {
@@ -76,13 +83,21 @@ public class MulticastDNSResolver implements Runnable {
                             if (errorCode != 3) {
                                 Log.w(TAG, "Fail!: " + serviceInfo.toString() + " : " + errorCode);
                             } else {
-                                listener.onServiceResolved(serviceInfo);
+                                DeviceTypeResolver resolver = deviceTypeResolverService.get(serviceInfo);
+                                if (resolver != null) {
+                                    Device newDevice = resolver.resolve(serviceInfo);
+                                    listener.onDeviceResolved(newDevice);
+                                }
                             }
                         }
 
                         @Override
                         public void onServiceResolved(NsdServiceInfo serviceInfo) {
-                            listener.onServiceResolved(serviceInfo);
+                            DeviceTypeResolver resolver = deviceTypeResolverService.get(serviceInfo);
+                            if (resolver != null) {
+                                Device newDevice = resolver.resolve(serviceInfo);
+                                listener.onDeviceResolved(newDevice);
+                            }
                         }
                     });
                 }

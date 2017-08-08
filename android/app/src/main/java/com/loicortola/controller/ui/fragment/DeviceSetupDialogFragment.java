@@ -11,7 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TextView;
 
-import com.loicortola.ledcontroller.R;
+import com.loicortola.controller.R;
 
 /**
  * Created by loic on 27/03/2016.

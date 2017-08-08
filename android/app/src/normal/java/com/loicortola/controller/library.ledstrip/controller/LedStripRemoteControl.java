@@ -14,7 +14,7 @@ import com.loicortola.controller.library.ledstrip.model.Status;
 import com.loicortola.controller.library.ledstrip.service.LedStripService;
 import com.loicortola.controller.model.Animation;
 import com.loicortola.controller.model.Device;
-import com.loicortola.ledcontroller.R;
+import com.loicortola.controller.R;
 
 import java.util.ArrayList;
 import java.util.Collections;

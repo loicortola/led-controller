@@ -1,8 +1,8 @@
-package com.loicortola.controller.service;
+package com.loicortola.controller.device;
 
 import android.net.nsd.NsdServiceInfo;
 
-import com.loicortola.controller.resolver.DeviceTypeResolver;
+
 import com.loicortola.controller.library.ledstrip.resolver.LedStripTypeResolver;
 
 import java.util.ArrayList;

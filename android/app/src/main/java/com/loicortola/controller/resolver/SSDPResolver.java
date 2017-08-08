@@ -1,15 +1,17 @@
 package com.loicortola.controller.resolver;
 
 import android.content.Context;
-import android.net.nsd.NsdManager;
-import android.net.nsd.NsdServiceInfo;
 import android.os.Handler;
 import android.util.Log;
+
+import com.loicortola.controller.device.DeviceTypeResolver;
+import com.loicortola.controller.device.DeviceTypeResolverService;
+import com.loicortola.controller.model.Device;
+import com.loicortola.controller.service.DeviceService;
 
 import io.resourcepool.jarpic.client.SsdpClient;
 import io.resourcepool.jarpic.client.SsdpClientImpl;
 import io.resourcepool.jarpic.model.DiscoveryListener;
-import io.resourcepool.jarpic.model.DiscoveryRequest;
 import io.resourcepool.jarpic.model.SsdpRequest;
 import io.resourcepool.jarpic.model.SsdpService;
 import io.resourcepool.jarpic.model.SsdpServiceAnnouncement;
@@ -19,7 +21,6 @@ import io.resourcepool.jarpic.model.SsdpServiceAnnouncement;
  */
 public class SSDPResolver implements Runnable {
 
-
     public interface OnServiceResolvedListener {
         void onServiceResolved(SsdpService service);
         void onStopped();
@@ -28,15 +29,17 @@ public class SSDPResolver implements Runnable {
     private static final String TAG = SSDPResolver.class.getName();
     private static final long TIMEOUT_MILLIS = 30000;
 
-    private final OnServiceResolvedListener listener;
+    private final DeviceService.OnDeviceResolvedListener listener;
     private DiscoveryListener discoveryListener;
+    private final DeviceTypeResolverService deviceTypeResolverService;
     private final SsdpClient resolver;
     private Runnable stopper;
     private Handler handler;
 
-    public SSDPResolver(Context ctx, Handler handler, OnServiceResolvedListener listener) {
+    public SSDPResolver(Context ctx, Handler handler, DeviceTypeResolverService deviceTypResolverService, DeviceService.OnDeviceResolvedListener listener) {
         this.listener = listener;
         this.handler = handler;
+        this.deviceTypeResolverService = deviceTypResolverService;
         this.resolver = new SsdpClientImpl();
         this.stopper = new Runnable() {
             @Override
@@ -66,7 +69,11 @@ public class SSDPResolver implements Runnable {
         discoveryListener = new DiscoveryListener() {
             @Override
             public void onServiceDiscovered(SsdpService service) {
-                listener.onServiceResolved(service);
+                DeviceTypeResolver resolver = deviceTypeResolverService.get(service);
+                if (resolver != null) {
+                    Device newDevice = resolver.resolve(service);
+                    listener.onDeviceResolved(newDevice);
+                }
             }
 
             @Override

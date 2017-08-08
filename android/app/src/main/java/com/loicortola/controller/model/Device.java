@@ -1,8 +1,8 @@
 package com.loicortola.controller.model;
 
 import com.loicortola.controller.command.Command;
-import com.loicortola.controller.resolver.DeviceTypeResolver;
-import com.loicortola.ledcontroller.R;
+import com.loicortola.controller.device.DeviceTypeResolver;
+import com.loicortola.controller.R;
 
 /**
  * Created by loic on 28/03/2016.
@@ -79,6 +79,10 @@ public class Device {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public void setResolver(DeviceTypeResolver resolver) {
+        this.resolver = resolver;
     }
 
     @Override

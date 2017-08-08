@@ -17,7 +17,7 @@ import com.loicortola.controller.command.behavior.Colorable;
 import com.loicortola.controller.command.behavior.HealthAware;
 import com.loicortola.controller.command.behavior.Secured;
 import com.loicortola.controller.command.behavior.Switchable;
-import com.loicortola.ledcontroller.R;
+import com.loicortola.controller.R;
 import com.loicortola.controller.model.Device;
 
 import java.util.ArrayList;

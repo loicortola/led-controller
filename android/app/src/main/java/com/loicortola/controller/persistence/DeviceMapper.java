@@ -1,6 +1,6 @@
 package com.loicortola.controller.persistence;
 
-import com.loicortola.controller.service.DeviceTypeResolverService;
+import com.loicortola.controller.device.DeviceTypeResolverService;
 
 import java.util.ArrayList;
 import java.util.List;

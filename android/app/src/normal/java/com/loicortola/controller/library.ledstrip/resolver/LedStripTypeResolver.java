@@ -11,8 +11,8 @@ import com.loicortola.controller.command.LoadPresetCommand;
 import com.loicortola.controller.command.SwitchCommand;
 import com.loicortola.controller.library.ledstrip.controller.LedStripRemoteControl;
 import com.loicortola.controller.model.Device;
-import com.loicortola.controller.resolver.DeviceTypeResolver;
-import com.loicortola.ledcontroller.R;
+import com.loicortola.controller.device.DeviceTypeResolver;
+import com.loicortola.controller.R;
 
 import io.resourcepool.jarpic.model.SsdpService;
 

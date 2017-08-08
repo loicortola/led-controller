@@ -2,22 +2,20 @@ package com.loicortola.controller.service;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.nsd.NsdServiceInfo;
 import android.os.Handler;
 import android.util.Log;
 
+import com.loicortola.controller.device.DeviceTypeResolverService;
 import com.loicortola.controller.persistence.DaoMaster;
 import com.loicortola.controller.persistence.DaoSession;
 import com.loicortola.controller.persistence.DeviceDao;
 import com.loicortola.controller.persistence.DeviceMapper;
 import com.loicortola.controller.model.Device;
-import com.loicortola.controller.resolver.DeviceTypeResolver;
+import com.loicortola.controller.resolver.MockedResolver;
 import com.loicortola.controller.resolver.MulticastDNSResolver;
 import com.loicortola.controller.resolver.SSDPResolver;
 
 import java.util.List;
-
-import io.resourcepool.jarpic.model.SsdpService;
 
 /**
  * Created by loic on 28/03/2016.
@@ -30,21 +28,18 @@ public class DeviceService {
     private DaoSession daoSession;
     private DeviceDao deviceDao;
     private DeviceMapper deviceMapper;
-    private SSDPResolver ssdpResolver;
+    // Different kinds of resolvers
+    private SSDPResolver mSsdpResolver;
     private MulticastDNSResolver mDNSResolver;
+    private MockedResolver mMockedResolver;
     private DeviceTypeResolverService deviceTypeResolverService;
 
     private static final String TAG = DeviceService.class.getSimpleName();
 
-    public void remove(String deviceId) {
-        Device device = get(deviceId);
-        deviceDao.deleteByKey(device.getDbId());
-    }
-
     public interface OnDeviceResolvedListener {
         void onDeviceResolved(Device d);
+        void onStopped();
     }
-
 
     public DeviceService(Context ctx) {
         this.ctx = ctx.getApplicationContext();
@@ -84,6 +79,11 @@ public class DeviceService {
         deviceDao.update(newDeviceDb);
     }
 
+    public void remove(String deviceId) {
+        Device device = get(deviceId);
+        deviceDao.deleteByKey(device.getDbId());
+    }
+
     public Device get(String id) {
         return deviceMapper.map(deviceDao.queryBuilder()
                 .where(DeviceDao.Properties.DeviceId.eq(id))
@@ -99,60 +99,45 @@ public class DeviceService {
         if (mDNSResolver != null) {
             mDNSResolver.stop();
         }
-
-        if (ssdpResolver != null) {
-            ssdpResolver.stop();
+        if (mSsdpResolver != null) {
+            mSsdpResolver.stop();
+        }
+        if (mMockedResolver != null) {
+            mMockedResolver.stop();
         }
 
-        mDNSResolver = new MulticastDNSResolver(ctx, mHandler, "_http._tcp.", new MulticastDNSResolver.OnServiceResolvedListener() {
+
+        OnDeviceResolvedListener listener = new OnDeviceResolvedListener() {
+
             @Override
-            public void onServiceResolved(NsdServiceInfo info) {
-                DeviceTypeResolver resolver = deviceTypeResolverService.get(info);
-                if (resolver != null) {
-                    Device newDevice = resolver.resolve(info);
-                    Log.d(TAG, "Service discovery success for device " + newDevice);
-                    if (!exists(newDevice.getId())) {
-                        // Save or update device
-                        save(newDevice);
-                    }
-                    // Callback
-                    if (l != null) {
-                        l.onDeviceResolved(newDevice);
-                    }
+            public void onDeviceResolved(Device newDevice) {
+                Log.d(TAG, "Service discovery success for device " + newDevice);
+                if (!exists(newDevice.getId())) {
+                    // Save or update device
+                    save(newDevice);
+                }
+                // Callback
+                if (l != null) {
+                    l.onDeviceResolved(newDevice);
                 }
             }
 
             @Override
             public void onStopped() {
                 mDNSResolver = null;
+                mSsdpResolver = null;
+                mMockedResolver = null;
             }
-        });
+        };
+
+        mDNSResolver = new MulticastDNSResolver(ctx, mHandler, deviceTypeResolverService, "_http._tcp.", listener);
+        mSsdpResolver = new SSDPResolver(ctx, mHandler, deviceTypeResolverService, listener);
+        mMockedResolver = new MockedResolver(deviceTypeResolverService, listener);
+
         mDNSResolver.run();
+        mSsdpResolver.run();
+        mMockedResolver.run();
 
-        ssdpResolver = new SSDPResolver(ctx, mHandler, new SSDPResolver.OnServiceResolvedListener() {
-            @Override
-            public void onServiceResolved(SsdpService service) {
-                DeviceTypeResolver resolver = deviceTypeResolverService.get(service);
-                if (resolver != null) {
-                    Device newDevice = resolver.resolve(service);
-                    Log.d(TAG, "Service discovery success for device " + newDevice);
-                    if (!exists(newDevice.getId())) {
-                        // Save or update device
-                        save(newDevice);
-                    }
-                    // Callback
-                    if (l != null) {
-                        l.onDeviceResolved(newDevice);
-                    }
-                }
-            }
-
-            @Override
-            public void onStopped() {
-                ssdpResolver = null;
-            }
-        });
-        ssdpResolver.run();
     }
 
 }
