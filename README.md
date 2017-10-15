@@ -2,6 +2,9 @@
 
 All-in-one Smartphone-controlled Led Controller for ESP-8266.  
 
+![main-menu](1-main-menu.png)
+![device-remote](2-device-remote.png)
+
 ## Requirements
 
 The current version has been rewritten entirely in C/C++ to use along with Arduino IDE.
@@ -11,6 +14,10 @@ The current version has been rewritten entirely in C/C++ to use along with Ardui
  * [Install ESP8266 Arduino filesystem uploader plugin](https://github.com/esp8266/arduino-esp8266fs-plugin)
 
 **NB: You can find a previous version for NodeMCU (in LUA) in previous commits.**
+
+## Schematics
+See [Issue #1](https://github.com/loicortola/led-controller/issues/1) for current prototype schematics.
+**Seeking contributions for EAGLE schematics for a circuit-board.**
 
 ## Setup
 
@@ -46,3 +53,10 @@ Make sure you are connected on the same wifi network as your LED Controller.
 When your Controller is successfully found, a Dialog will pop-up so you can enter your password key.
 
 You're done! The Controller is now successfully paired to your Android App!
+
+** Seeking contributions to improve UX and features of the app.**
+
+
+### Contributors
+All contributions are welcome.
+If you want to join the project, please let me know on Twitter [@LoicOrtola](https://twitter.com/loicortola) or start sending PRs ;)
