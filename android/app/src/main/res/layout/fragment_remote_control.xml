@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#eee"
+    android:background="#333"
     android:layout_margin="10dp"
     tools:context="com.loicortola.controller.ui.activity.DrawerActivity">
 
