@@ -9,3 +9,7 @@ Here are the necessary parts to buy for your Led Controller board:
  * 4x [RC1206FR-0710KL - 10KOhms 1% RESISTOR 1206](https://www.digikey.fr/product-detail/en/yageo/RC1206FR-0710KL/311-10.0KFRCT-ND/731430)
  * 1x [ESP-8266 - ESP12](https://fr.aliexpress.com/wholesale?catId=0&initiative_id=SB_20171122124705&SearchText=esp12)
  * 1x [15PIN-HEAD](https://fr.aliexpress.com/wholesale?catId=0&initiative_id=SB_20171122124828&SearchText=male+pin+header)
+
+You can also order the PCBs directly from Aisler.net:  
+[Board PCB](https://aisler.net/loicortola/led-controller/board-pcb)
+[Shield PCB](https://aisler.net/loicortola/led-controller/shield)  
