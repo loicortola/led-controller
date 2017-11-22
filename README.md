@@ -1,6 +1,6 @@
 # Led Controller
 
-All-in-one Smartphone-controlled Led Controller for ESP-8266.  
+All-in-one OpenSource & Open Hardware Smartphone-controlled Led Controller for ESP-8266.  
 
 ![main-menu](1-main-menu.png)
 ![device-remote](2-device-remote.png)
@@ -12,12 +12,17 @@ The current version has been rewritten entirely in C/C++ to use along with Ardui
  * Install Arduino IDE
  * [Install ESP8266 model](https://github.com/esp8266/Arduino)
  * [Install ESP8266 Arduino filesystem uploader plugin](https://github.com/esp8266/arduino-esp8266fs-plugin)
-
+ * Install EAGLE or KiCAD (only if you want to edit the board hardware design)
 **NB: You can find a previous version for NodeMCU (in LUA) in previous commits.**
 
 ## Schematics
-See [Issue #1](https://github.com/loicortola/led-controller/issues/1) for current prototype schematics.
-**Seeking contributions for EAGLE schematics for a circuit-board.**
+This board is Open-Hardware.  
+All parts and schematics are available in the hardware folder.  
+![main-board-schematics](board-sch.png)
+![shield-schematics](shield-sch.png)
+
+![main-board-board](board-board.png)
+![shield-board](shield-board.png)
 
 ## Setup
 

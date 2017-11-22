@@ -30,21 +30,21 @@ String DAO::getSSID() {
   return readString(EEPROM_SSID);
 }
 void DAO::storeSSID(String ssid) {
-  storeString(EEPROM_SSID, ssid, min(32,ssid.length()));
+  storeString(EEPROM_SSID, ssid, _min(32,ssid.length()));
   EEPROM.commit();
 }
 String DAO::getKey() {
   return readString(EEPROM_KEY);
 }
 void DAO::storeKey(String key) {
-  storeString(EEPROM_KEY, key, min(64,key.length()));
+  storeString(EEPROM_KEY, key, _min(64,key.length()));
   EEPROM.commit();
 }
 String DAO::getPassword() {
   return readString(EEPROM_PASSWORD);
 }
 void DAO::storePassword(String password) {
-  storeString(EEPROM_PASSWORD, password, min(32,password.length()));
+  storeString(EEPROM_PASSWORD, password, _min(32,password.length()));
   EEPROM.commit();
 }
 int DAO::getMode() {
