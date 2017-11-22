@@ -31,7 +31,7 @@ public class DeviceSetupDialogFragment extends DialogFragment {
     private OnSettingsChangedListener l;
 
     public interface OnSettingsChangedListener {
-        void onSecretKeySubmit(String deviceId, String key);
+        void onSecretKeySubmit(String deviceId, String name, String key);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class DeviceSetupDialogFragment extends DialogFragment {
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        l.onSecretKeySubmit(deviceId, ((TextView)rootView.findViewById(R.id.key)).getText().toString());
+                        l.onSecretKeySubmit(deviceId, ((TextView)rootView.findViewById(R.id.device_name)).getText().toString(), ((TextView)rootView.findViewById(R.id.key)).getText().toString());
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {

@@ -113,7 +113,7 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
     }
 
     @Override
-    public void onSecretKeySubmit(String deviceId, final String key) {
+    public void onSecretKeySubmit(String deviceId, final String deviceName, final String key) {
         final Device device = mDeviceService.get(deviceId);
 
         Object remoteControl = device.getResolver().getRemoteControl(device);
@@ -122,6 +122,7 @@ public class DeviceFragment extends Fragment implements DeviceAdapter.DeviceCard
             public void onValidityChecked(boolean valid) {
                 if (valid) {
                     device.setKey(key);
+                    device.setName(deviceName);
                     // FIXME I know. UI Thread stuff.
                     mDeviceService.save(device);
                     Toast.makeText(getActivity(), "Secret Key Updated successfully", Toast.LENGTH_LONG).show();
